@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Picker, Button, StyleSheet } from "react-native";
+import { View, Text, Button, StyleSheet } from "react-native";
+import { Picker } from "@react-native-community/picker";
 import theme from "../styles/theme.style";
 
 const UserPrompt = ({ gameState, name, toAsk, onValChange, onAsk }) => {
