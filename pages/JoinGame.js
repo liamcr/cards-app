@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Text, Button, Alert, Picker } from "react-native";
+import { View, StyleSheet, Text, Button, Alert } from "react-native";
+import { Picker } from "@react-native-community/picker";
 import { TextInput } from "react-native-gesture-handler";
 import theme from "../styles/theme.style";
 import { createGame, joinGame } from "../utils/firebaseFunctions";
