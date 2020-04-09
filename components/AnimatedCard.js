@@ -23,12 +23,7 @@ const AnimatedCard = ({ card }) => {
         ],
       }}
     >
-      <Card
-        rank={card.rank}
-        strID={card.strID}
-        suit={card.suit}
-        symbol={card.symbol}
-      />
+      <Card rank={card.rank} suit={card.suit} />
     </Animated.View>
   );
 };

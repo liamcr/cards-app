@@ -23,7 +23,7 @@ const UserHand = ({ player, renderCard, navigation }) => {
           horizontal
           data={player.hand}
           renderItem={renderCard}
-          keyExtractor={(item) => item.strID}
+          keyExtractor={(item, index) => index.toString()}
         />
       </View>
     </View>

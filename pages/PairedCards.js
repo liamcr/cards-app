@@ -16,7 +16,7 @@ const PairedCards = ({ route, navigation }) => {
             data={cards}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
-              <Card rank={item.rank} symbol={item.symbol} />
+              <Card rank={item.rank} suit={item.suit} />
             )}
           />
         )}
