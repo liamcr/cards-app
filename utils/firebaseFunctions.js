@@ -3,6 +3,7 @@ import firestore from "@react-native-firebase/firestore";
 import pondTemplate from "../utils/pondTemplate.json";
 import AsyncStorage from "@react-native-community/async-storage";
 import MaxPlayers from "./gameMaxPlayers.json";
+import { shuffle } from "./helperFunctions";
 
 /* 
   Saves game locally, so that the app can remember that the user
@@ -521,10 +522,8 @@ export async function startGame(gameId) {
   await document.get().then(doc => {
     const data = doc.data();
 
-    let shuffledPond = [...data.pond];
-
     // Shuffle deck
-    shuffledPond.sort(() => Math.random() - 0.5);
+    let shuffledPond = shuffle([...data.pond]);
 
     let players = [...data.players];
 
