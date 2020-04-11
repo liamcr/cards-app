@@ -19,6 +19,10 @@ const HomePage = ({ navigation }) => {
     navigation.navigate("Join Game", { isCreator: false });
   };
 
+  const onContinueGame = () => {
+    navigation.navigate("Continue Game");
+  };
+
   return (
     <View style={styles.homePageContainer}>
       {/* TODO: Replace the image URI to our real logo */}
@@ -34,6 +38,11 @@ const HomePage = ({ navigation }) => {
           color={theme.PRIMARY_COLOUR}
           onPress={onJoinGame}
         />
+        <Button
+          title="Continue Game"
+          color={theme.PRIMARY_COLOUR}
+          onPress={onContinueGame}
+        />
       </View>
     </View>
   );
@@ -44,18 +53,18 @@ const styles = StyleSheet.create({
     height: "100%",
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-around",
+    justifyContent: "space-around"
   },
   logo: {
     height: "20%",
-    width: "70%",
+    width: "70%"
   },
   buttonContainer: {
     width: "33%",
     display: "flex",
     justifyContent: "space-between",
-    height: "15%",
-  },
+    height: "20%"
+  }
 });
 
 export default HomePage;
