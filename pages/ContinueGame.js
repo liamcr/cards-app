@@ -8,9 +8,16 @@ import {
 } from "react-native";
 import theme from "../styles/theme.style";
 import ContinueGameRow from "../components/ContinueGameRow";
+import { getLocalData } from "../utils/firebaseFunctions";
 
-const ContinueGame = () => {
+const ContinueGame = ({ navigation }) => {
   const [localGames, setLocalGames] = useState(null);
+
+  if (localGames === null) {
+    getLocalData().then(data => {
+      setLocalGames(data);
+    });
+  }
 
   return (
     <View style={styles.pageContainer}>
@@ -20,8 +27,14 @@ const ContinueGame = () => {
           <ActivityIndicator color={theme.PRIMARY_COLOUR} />
         ) : (
           <FlatList
-            data={localGames}
-            renderItem={({ item }) => <ContinueGameRow gameId={item} />}
+            data={Object.keys(localGames)}
+            renderItem={({ item }) => (
+              <ContinueGameRow
+                gameId={item}
+                playerName={localGames[item]}
+                navigation={navigation}
+              />
+            )}
             keyExtractor={(item, index) => index.toString()}
           />
         )}

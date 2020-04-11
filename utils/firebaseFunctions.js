@@ -36,6 +36,20 @@ export async function setLocalData(gameId, name) {
   });
 }
 
+export async function getLocalData() {
+  let localData;
+
+  await AsyncStorage.getItem("cardGamesActive", (err, res) => {
+    if (err) {
+      console.error(err.message);
+    }
+
+    localData = res;
+  });
+
+  return JSON.parse(localData);
+}
+
 /* 
   Returns a Promise<Boolean> that checks to see if the user
   has already joined the specified game.
