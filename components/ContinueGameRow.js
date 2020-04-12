@@ -12,10 +12,10 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
   };
 
   const getGameStatus = () => {
-    if (gameData.started) {
-      return "Playing";
-    } else if (gameData.finished) {
+    if (gameData.finished) {
       return "Finished";
+    } else if (gameData.started) {
+      return "Playing";
     } else {
       return "Waiting";
     }

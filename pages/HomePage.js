@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     width: "70%"
   },
   buttonContainer: {
-    width: "33%",
+    width: "50%",
     display: "flex",
     justifyContent: "space-between",
     height: "20%"
