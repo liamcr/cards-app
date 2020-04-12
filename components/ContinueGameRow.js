@@ -32,7 +32,10 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
       } else if (!gameData.finished) {
         navigation.navigate("Gameplay", {
           gameId: gameId,
-          name: playerName
+          name: playerName,
+          shouldEnablePond:
+            gameData.players[gameData.turn].name === playerName &&
+            gameData.turnState !== "choosingCard"
         });
       } else {
         navigation.navigate("GameEnd", {

@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   Image,
   Animated,
-  useWindowDimensions,
+  useWindowDimensions
 } from "react-native";
 import LoadingOverlay from "../components/LoadingOverlay";
 import {
@@ -15,7 +15,7 @@ import {
   pairUpHand,
   endGame,
   finishTurn,
-  setTurnState,
+  setTurnState
 } from "../utils/firebaseFunctions";
 import firestore from "@react-native-firebase/firestore";
 import AskOverlay from "../components/AskOverlay";
@@ -30,7 +30,7 @@ import CatchImg from "../assets/catch.png";
 import GoFishImg from "../assets/goFish.png";
 
 const GameplayPage = ({ route, navigation }) => {
-  const { gameId, name } = route.params;
+  const { gameId, name, shouldEnablePond } = route.params;
   const screenWidth = useWindowDimensions().width;
   const [gameState, setGameState] = useState(null);
 
@@ -49,7 +49,9 @@ const GameplayPage = ({ route, navigation }) => {
   // firebase attribute so there is no delay when setting this value.
   // In other words, it prevents the user from drawing more than one card
   // at a time.
-  const [enablePond, setEnablePond] = useState(false);
+  const [enablePond, setEnablePond] = useState(
+    shouldEnablePond ? shouldEnablePond : false
+  );
 
   // lastCardAskedFor keeps track of the last card the user has asked an opponent
   // for. This is to handle the rule "If the card you draw matches the card
@@ -76,7 +78,7 @@ const GameplayPage = ({ route, navigation }) => {
     Animated.timing(xOffset, {
       toValue: -1 * screenWidth,
       duration: 1500,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start(() => {
       xOffset.setValue(screenWidth);
     });
@@ -86,12 +88,12 @@ const GameplayPage = ({ route, navigation }) => {
   const askForCard = (rank, playerIndex) => {
     setIsAsking(false);
 
-    let opponent = gameState.players.filter((player) => player.name !== name)[
+    let opponent = gameState.players.filter(player => player.name !== name)[
       playerIndex
     ];
 
     setWaitingForFirebase(true);
-    takeCard(gameId, name, opponent.name, rank).then((opponentHadCard) => {
+    takeCard(gameId, name, opponent.name, rank).then(opponentHadCard => {
       if (!opponentHadCard) {
         if (gameState.pond.length === 0) {
           finishTurn(gameId, gameState).then(() => {
@@ -116,14 +118,14 @@ const GameplayPage = ({ route, navigation }) => {
     const unsubscribe = firestore()
       .collection("liveGames")
       .doc(gameId)
-      .onSnapshot((doc) => {
+      .onSnapshot(doc => {
         if (doc.exists) {
           let updatedGameState = doc.data();
 
           if (updatedGameState.finished) {
             navigation.replace("GameEnd", { gameId: gameId, name: name });
           } else {
-            pairUpHand(gameId, name).then((pairsFound) => {
+            pairUpHand(gameId, name).then(pairsFound => {
               if (pairsFound === 0) {
                 setGameState(updatedGameState);
 
@@ -132,7 +134,7 @@ const GameplayPage = ({ route, navigation }) => {
                 if (
                   updatedGameState.pond.length === 0 &&
                   updatedGameState.players.filter(
-                    (player) => player.hand.length > 0
+                    player => player.hand.length > 0
                   ).length === 0
                 ) {
                   endGame(gameId);
@@ -179,7 +181,7 @@ const GameplayPage = ({ route, navigation }) => {
             onPress={() => {
               setEnablePond(false);
               setWaitingForFirebase(true);
-              takeFromPond(gameId, name).then((cardDrawn) => {
+              takeFromPond(gameId, name).then(cardDrawn => {
                 if (gameState.turnState === "fishing") {
                   if (cardDrawn.rank === lastCardAskedFor) {
                     setOverlayURI(CatchImg);
@@ -200,7 +202,7 @@ const GameplayPage = ({ route, navigation }) => {
             }}
           />
           {gameState.players
-            .filter((player) => player.name !== name)
+            .filter(player => player.name !== name)
             .map((player, index) => (
               <OpponentState opponent={player} index={index} key={index} />
             ))}
@@ -218,7 +220,7 @@ const GameplayPage = ({ route, navigation }) => {
             }}
           />
           <UserHand
-            player={gameState.players.find((player) => player.name === name)}
+            player={gameState.players.find(player => player.name === name)}
             renderCard={({ item }) => (
               <TouchableOpacity
                 onPress={() => {
@@ -260,9 +262,9 @@ const GameplayPage = ({ route, navigation }) => {
             elevation: 6,
             transform: [
               {
-                translateX: xOffset,
-              },
-            ],
+                translateX: xOffset
+              }
+            ]
           }}
         >
           <Image style={{ height: "30%", width: "100%" }} source={overlayURI} />
@@ -276,23 +278,23 @@ const styles = StyleSheet.create({
   gameplayContainer: {
     display: "flex",
     justifyContent: "space-between",
-    height: "100%",
+    height: "100%"
   },
   userContainer: {
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
   userHandContainer: {
     height: 144,
     backgroundColor: "#F2F2F2",
-    marginTop: 8,
+    marginTop: 8
   },
   opponentContainer: {
     height: "50%",
     display: "flex",
     justifyContent: "flex-end",
-    alignItems: "center",
-  },
+    alignItems: "center"
+  }
 });
 
 export default GameplayPage;
