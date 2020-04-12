@@ -44,7 +44,7 @@ export async function getLocalData() {
       console.error(err.message);
     }
 
-    localData = res;
+    localData = res === null ? "{}" : res;
   });
 
   return JSON.parse(localData);

@@ -25,6 +25,8 @@ const ContinueGame = ({ navigation }) => {
       <View style={styles.gameListContainer}>
         {localGames === null ? (
           <ActivityIndicator color={theme.PRIMARY_COLOUR} />
+        ) : Object.keys(localGames).length === 0 ? (
+          <Text style={styles.noGamesText}>You have no ongoing games</Text>
         ) : (
           <FlatList
             data={Object.keys(localGames)}
@@ -52,6 +54,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32
+  },
+  noGamesText: {
+    fontSize: 20,
+    color: "#888888",
+    textAlign: "center"
   },
   gameListContainer: {
     height: "50%",
