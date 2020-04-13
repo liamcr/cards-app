@@ -3,21 +3,30 @@ import { View, FlatList, Text, StyleSheet, Image } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import PairIcon from "../assets/pairIcon.png";
 
-const UserHand = ({ player, renderCard, navigation }) => {
+const UserHand = ({ player, renderCard, showPairs, navigation }) => {
   return (
     <View>
       <View style={styles.scoreContainer}>
-        <Text style={styles.scoreText}>{`${player.numPairs} pair${
-          player.numPairs !== 1 ? "s" : ""
-        }`}</Text>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate("PairedCards", { cards: player.pairedCards });
-          }}
-        >
-          <Image source={PairIcon} style={{ width: 50, height: 50 }} />
-        </TouchableOpacity>
+        {showPairs ? (
+          <>
+            <Text style={styles.scoreText}>{`${player.numPairs} pair${
+              player.numPairs !== 1 ? "s" : ""
+            }`}</Text>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("PairedCards", {
+                  cards: player.pairedCards
+                });
+              }}
+            >
+              <Image source={PairIcon} style={{ width: 50, height: 50 }} />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <Text style={styles.scoreText}>Your hand:</Text>
+        )}
       </View>
+
       <View style={styles.userHandContainer}>
         <FlatList
           horizontal
@@ -34,7 +43,7 @@ const styles = StyleSheet.create({
   userHandContainer: {
     height: 144,
     backgroundColor: "#F2F2F2",
-    marginTop: 8,
+    marginTop: 8
   },
   scoreContainer: {
     display: "flex",
@@ -42,11 +51,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingEnd: 16,
-    paddingStart: 16,
+    paddingStart: 16
   },
   scoreText: {
-    fontSize: 20,
-  },
+    fontSize: 20
+  }
 });
 
 export default UserHand;

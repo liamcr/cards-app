@@ -113,15 +113,11 @@ const WaitingRoom = ({ route, navigation }) => {
             setPlayers(newDocPlayers);
 
             if (updatedData.game === "goFish") {
-              console.log("Here?");
               startingHandLength = newDocPlayers.length <= 3 ? 7 : 5;
             } else if (updatedData.game === "crazyEights") {
-              console.log("HEre");
               startingHandLength = 8;
             }
           }
-
-          console.log(startingHandLength);
 
           if (
             updatedData.started &&

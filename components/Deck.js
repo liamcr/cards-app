@@ -6,10 +6,10 @@ import {
   Text,
   StyleSheet,
   Easing,
-  useWindowDimensions,
+  useWindowDimensions
 } from "react-native";
 
-const Deck = ({ onPress, enabled, deck }) => {
+const Deck = ({ onPress, enabled, deck, showCount }) => {
   const [yOffset] = useState(new Animated.Value(-2));
   const [animating, setAnimating] = useState(false);
   const offsetMax = useWindowDimensions().height * 0.8;
@@ -25,7 +25,7 @@ const Deck = ({ onPress, enabled, deck }) => {
               Animated.timing(yOffset, {
                 toValue: offsetMax,
                 duration: 300,
-                useNativeDriver: true,
+                useNativeDriver: true
               }).start(() => {
                 yOffset.setValue(-2);
                 setAnimating(false);
@@ -39,16 +39,16 @@ const Deck = ({ onPress, enabled, deck }) => {
               ...styles.cardBackLarge,
               transform: [
                 {
-                  translateY: yOffset,
-                },
+                  translateY: yOffset
+                }
               ],
-              marginLeft: -2,
+              marginLeft: -2
             }}
           />
         </TouchableWithoutFeedback>
       </View>
 
-      <Text style={styles.deckCount}>{deck.length}</Text>
+      {showCount && <Text style={styles.deckCount}>{deck.length}</Text>}
     </View>
   );
 };
@@ -56,7 +56,7 @@ const Deck = ({ onPress, enabled, deck }) => {
 const styles = StyleSheet.create({
   deckContainer: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "center"
   },
   cardBackLarge: {
     height: 128,
@@ -64,12 +64,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 4,
     backgroundColor: "red",
-    borderColor: "white",
+    borderColor: "white"
   },
   deckCount: {
     fontSize: 32,
-    marginTop: 8,
-  },
+    marginTop: 8
+  }
 });
 
 export default Deck;

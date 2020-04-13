@@ -410,25 +410,43 @@ export async function createGame(creatorName, gameType) {
       throw error;
     });
 
-  // TODO: Change initial turn state to "choosingCard" after
-  // shuffling deck is implemented
-  gameObject = {
-    game: gameType,
-    turn: 0,
-    started: false,
-    finished: false,
-    players: [
-      {
-        name: creatorName,
-        numPairs: 0,
-        hand: [],
-        pairedCards: []
-      }
-    ],
-    pond: pondTemplate,
-    gameUpdate: "Game Starting...",
-    turnState: "choosingCard"
-  };
+  if (gameType === "goFish") {
+    gameObject = {
+      game: gameType,
+      turn: 0,
+      started: false,
+      finished: false,
+      players: [
+        {
+          name: creatorName,
+          numPairs: 0,
+          hand: [],
+          pairedCards: []
+        }
+      ],
+      pond: pondTemplate,
+      gameUpdate: "Game Starting...",
+      turnState: "choosingCard"
+    };
+  } else if (gameType === "crazyEights") {
+    gameObject = {
+      game: gameType,
+      turn: 0,
+      started: false,
+      finished: false,
+      players: [
+        {
+          name: creatorName,
+          hand: []
+        }
+      ],
+      currentCard: null,
+      pond: pondTemplate,
+      gameUpdate: "Game Starting...",
+      toPickUp: 0,
+      playerRankings: []
+    };
+  }
 
   await firestore()
     .collection("liveGames")
@@ -478,12 +496,19 @@ export async function joinGame(name, gameId) {
             if (!inGame) {
               let currentPlayers = data.players;
 
-              currentPlayers.push({
-                name: name,
-                numPairs: 0,
-                hand: [],
-                pairedCards: []
-              });
+              if (data.game === "goFish") {
+                currentPlayers.push({
+                  name: name,
+                  numPairs: 0,
+                  hand: [],
+                  pairedCards: []
+                });
+              } else if (data.game === "crazyEights") {
+                currentPlayers.push({
+                  name: name,
+                  hand: 0
+                });
+              }
 
               document
                 .update({ players: currentPlayers })

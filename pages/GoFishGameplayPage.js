@@ -178,6 +178,7 @@ const GoFishGameplayPage = ({ route, navigation }) => {
           <Deck
             deck={gameState.pond}
             enabled={enablePond}
+            showCount
             onPress={() => {
               setEnablePond(false);
               setWaitingForFirebase(true);
@@ -233,6 +234,7 @@ const GoFishGameplayPage = ({ route, navigation }) => {
               </TouchableOpacity>
             )}
             navigation={navigation}
+            showPairs
           />
         </View>
 
