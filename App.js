@@ -6,11 +6,12 @@ import { createStackNavigator } from "@react-navigation/stack";
 import HomePage from "./pages/HomePage";
 import JoinGame from "./pages/JoinGame.js";
 import WaitingRoom from "./pages/WaitingRoom";
-import GameplayPage from "./pages/GameplayPage";
+import GoFishGameplayPage from "./pages/GoFishGameplayPage";
 import PairedCards from "./pages/PairedCards";
 import GameEnd from "./pages/GameEnd";
 import GoFishRules from "./pages/GoFishRules";
 import ContinueGame from "./pages/ContinueGame";
+import CrazyEightsGameplayPage from "./pages/CrazyEightsGameplayPage";
 
 const Stack = createStackNavigator();
 
@@ -22,7 +23,11 @@ const App = () => {
         <Stack.Screen name="Join Game" component={JoinGame} />
         <Stack.Screen name="Continue Game" component={ContinueGame} />
         <Stack.Screen name="Waiting Room" component={WaitingRoom} />
-        <Stack.Screen name="Gameplay" component={GameplayPage} />
+        <Stack.Screen name="Go Fish Gameplay" component={GoFishGameplayPage} />
+        <Stack.Screen
+          name="Crazy Eights Gameplay"
+          component={CrazyEightsGameplayPage}
+        />
         <Stack.Screen name="PairedCards" component={PairedCards} />
         <Stack.Screen name="GoFishRules" component={GoFishRules} />
         <Stack.Screen name="GameEnd" component={GameEnd} />

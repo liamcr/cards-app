@@ -19,17 +19,17 @@ const JoinGame = ({ route, navigation }) => {
 
     if (isCreator) {
       createGame(name, gameType)
-        .then((gameId) => {
+        .then(gameId => {
           setIsLoading(false);
           console.log(gameId);
 
           navigation.navigate("Waiting Room", {
             gameId: gameId,
             isCreator: isCreator,
-            name: name,
+            name: name
           });
         })
-        .catch((error) => {
+        .catch(error => {
           setIsLoading(false);
           Alert.alert("Something Went Wrong...", error.message);
         });
@@ -42,7 +42,7 @@ const JoinGame = ({ route, navigation }) => {
           navigation.navigate("Waiting Room", {
             gameId: roomCode,
             isCreator: isCreator,
-            name: name,
+            name: name
           });
         })
         .catch(({ message }) => {
@@ -79,6 +79,7 @@ const JoinGame = ({ route, navigation }) => {
               mode="dropdown"
             >
               <Picker.Item label="Go Fish" value="goFish" />
+              <Picker.Item label="Crazy Eights" value="crazyEights" />
             </Picker>
           </View>
         )}
@@ -110,17 +111,17 @@ const styles = StyleSheet.create({
     height: "100%",
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-around",
+    justifyContent: "space-around"
   },
   inputContainer: {
-    width: "50%",
+    width: "50%"
   },
   input: {
-    marginBottom: 32,
+    marginBottom: 32
   },
   inputPrompt: {
-    fontSize: theme.PROMPT_FONT_SIZE,
-  },
+    fontSize: theme.PROMPT_FONT_SIZE
+  }
 });
 
 export default JoinGame;

@@ -541,7 +541,13 @@ export async function startGame(gameId) {
 
     let players = [...data.players];
 
-    const numCardsToDeal = players.length <= 3 ? 7 : 5;
+    let numCardsToDeal;
+
+    if (data.game === "goFish") {
+      numCardsToDeal = players.length <= 3 ? 7 : 5;
+    } else if (data.game === "crazyEights") {
+      numCardsToDeal = 8;
+    }
 
     for (let i = 0; i < players.length; i++) {
       players[i].hand = shuffledPond.splice(0, numCardsToDeal);

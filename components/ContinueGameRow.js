@@ -8,7 +8,13 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
   const [gameData, setGameData] = useState(null);
 
   const gameTypeMapping = {
-    goFish: "Go Fish"
+    goFish: "Go Fish",
+    crazyEights: "Crazy Eights"
+  };
+
+  const gameplayScreenMapping = {
+    goFish: "Go Fish Gameplay",
+    crazyEights: "Crazy Eights Gameplay"
   };
 
   const getGameStatus = () => {
@@ -30,7 +36,7 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
           isCreator: gameData.players[0].name === playerName
         });
       } else if (!gameData.finished) {
-        navigation.navigate("Gameplay", {
+        navigation.navigate(gameplayScreenMapping[gameData.game], {
           gameId: gameId,
           name: playerName,
           shouldEnablePond:

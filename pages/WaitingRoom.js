@@ -21,10 +21,13 @@ const WaitingRoom = ({ route, navigation }) => {
   const { isCreator, gameId, name } = route.params;
 
   const [players, setPlayers] = useState([]);
-  const [startingHandLength, setStartingHandLength] = useState(7);
+
+  const gameplayScreenMapping = {
+    goFish: "Go Fish Gameplay",
+    crazyEights: "Crazy Eights Gameplay"
+  };
 
   // Boolean that is checked when a user presses "Leave Game"
-  // This removes "state update on unmounted component" warning
   let playerLeft = false;
 
   const onStart = () => {
@@ -104,11 +107,21 @@ const WaitingRoom = ({ route, navigation }) => {
         if (doc.exists) {
           let updatedData = doc.data();
           let newDocPlayers = updatedData.players;
+          let startingHandLength;
 
           if (!playerLeft) {
             setPlayers(newDocPlayers);
-            setStartingHandLength(newDocPlayers.length <= 3 ? 7 : 5);
+
+            if (updatedData.game === "goFish") {
+              console.log("Here?");
+              startingHandLength = newDocPlayers.length <= 3 ? 7 : 5;
+            } else if (updatedData.game === "crazyEights") {
+              console.log("HEre");
+              startingHandLength = 8;
+            }
           }
+
+          console.log(startingHandLength);
 
           if (
             updatedData.started &&
@@ -116,7 +129,10 @@ const WaitingRoom = ({ route, navigation }) => {
               player => player.hand.length === startingHandLength
             ).length === newDocPlayers.length
           ) {
-            navigation.replace("Gameplay", { gameId: gameId, name: name });
+            navigation.replace(gameplayScreenMapping[updatedData.game], {
+              gameId: gameId,
+              name: name
+            });
           }
         } else {
           navigation.navigate("Home");

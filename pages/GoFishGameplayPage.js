@@ -29,7 +29,7 @@ import AnimatedCard from "../components/AnimatedCard";
 import CatchImg from "../assets/catch.png";
 import GoFishImg from "../assets/goFish.png";
 
-const GameplayPage = ({ route, navigation }) => {
+const GoFishGameplayPage = ({ route, navigation }) => {
   const { gameId, name, shouldEnablePond } = route.params;
   const screenWidth = useWindowDimensions().width;
   const [gameState, setGameState] = useState(null);
@@ -297,4 +297,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default GameplayPage;
+export default GoFishGameplayPage;
