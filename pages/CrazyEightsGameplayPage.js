@@ -7,6 +7,7 @@ import OpponentState from "../components/OpponentState";
 import UserHand from "../components/UserHand";
 import AnimatedCard from "../components/AnimatedCard";
 import UserPrompt from "../components/UserPrompt";
+import CrazyEightsPlayedCard from "../components/CrazyEightsPlayedCard";
 
 const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -35,14 +36,18 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
     return (
       <View style={styles.gameplayContainer}>
         <View style={styles.opponentContainer}>
-          <Deck
-            deck={gameState.pond}
-            enabled={false}
-            onPress={() => {
-              console.log("pressed");
-            }}
-            showCount={false}
-          />
+          <View style={styles.cardsContainer}>
+            <Deck
+              deck={gameState.pond}
+              enabled={false}
+              onPress={() => {
+                console.log("pressed");
+              }}
+              showCount={false}
+            />
+            <CrazyEightsPlayedCard card={gameState.currentCard} />
+          </View>
+
           {gameState.players
             .filter(player => player.name !== name)
             .map((player, index) => (
@@ -82,6 +87,12 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "flex-end",
     alignItems: "center"
+  },
+  cardsContainer: {
+    display: "flex",
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-evenly"
   },
   userContainer: {
     display: "flex",
