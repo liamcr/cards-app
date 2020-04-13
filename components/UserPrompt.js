@@ -5,7 +5,7 @@ import theme from "../styles/theme.style";
 
 const UserPrompt = ({ gameState, name, toAsk, onValChange, onAsk }) => {
   if (
-    gameState.players.findIndex((player) => player.name === name) !==
+    gameState.players.findIndex(player => player.name === name) !==
     gameState.turn
   ) {
     return (
@@ -15,13 +15,22 @@ const UserPrompt = ({ gameState, name, toAsk, onValChange, onAsk }) => {
         </View>
       </View>
     );
+  } else if (gameState.game === "crazyEights") {
+    return (
+      <View style={styles.askForCardContainer}>
+        <View style={styles.askForCardSubcontainer}>
+          <Text style={styles.gameUpdateText}>
+            It's your turn! Choose a card to play!
+          </Text>
+        </View>
+      </View>
+    );
   } else if (gameState.turnState === "fishing") {
     return (
       <View style={styles.askForCardContainer}>
         <View style={styles.askForCardSubcontainer}>
           <Text style={styles.gameUpdateText}>{`${
-            gameState.players.filter((player) => player.name !== name)[toAsk]
-              .name
+            gameState.players.filter(player => player.name !== name)[toAsk].name
           } didn't have that card!`}</Text>
           <Text style={styles.gameUpdateText}>
             Take a card from the pond above
@@ -47,7 +56,7 @@ const UserPrompt = ({ gameState, name, toAsk, onValChange, onAsk }) => {
           <Text style={styles.gameUpdateText}>Ask someone for a card:</Text>
           <Picker
             selectedValue={
-              gameState.players.filter((player) => player.name !== name)[toAsk]
+              gameState.players.filter(player => player.name !== name)[toAsk]
                 .name
             }
             onValueChange={onValChange}
@@ -55,7 +64,7 @@ const UserPrompt = ({ gameState, name, toAsk, onValChange, onAsk }) => {
             style={{ width: "70%" }}
           >
             {gameState.players
-              .filter((player) => player.name !== name)
+              .filter(player => player.name !== name)
               .map((player, index) => (
                 <Picker.Item
                   key={index}
@@ -78,21 +87,21 @@ const UserPrompt = ({ gameState, name, toAsk, onValChange, onAsk }) => {
 const styles = StyleSheet.create({
   gameUpdateText: {
     textAlign: "center",
-    fontSize: 16,
+    fontSize: 16
   },
   askForCardContainer: {
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   askForCardSubcontainer: {
     width: "60%",
     display: "flex",
-    alignItems: "center",
+    alignItems: "center"
   },
   askButtonContainer: {
-    width: "50%",
-  },
+    width: "50%"
+  }
 });
 
 export default UserPrompt;

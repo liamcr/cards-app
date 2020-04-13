@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import LoadingOverlay from "../components/LoadingOverlay";
 import firestore from "@react-native-firebase/firestore";
 import Deck from "../components/Deck";
 import OpponentState from "../components/OpponentState";
 import UserHand from "../components/UserHand";
 import AnimatedCard from "../components/AnimatedCard";
+import UserPrompt from "../components/UserPrompt";
 
 const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -48,20 +49,23 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               <OpponentState opponent={player} index={index} key={index} />
             ))}
         </View>
-        <UserHand
-          player={gameState.players.find(player => player.name === name)}
-          renderCard={({ item }) => (
-            <TouchableOpacity
-              onPress={() => {
-                console.log(":)");
-              }}
-            >
-              <AnimatedCard card={item} />
-            </TouchableOpacity>
-          )}
-          navigation={navigation}
-          showPairs={false}
-        />
+        <View style={styles.userContainer}>
+          <UserPrompt gameState={gameState} name={name} />
+          <UserHand
+            player={gameState.players.find(player => player.name === name)}
+            renderCard={({ item }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  console.log(":)");
+                }}
+              >
+                <AnimatedCard card={item} />
+              </TouchableOpacity>
+            )}
+            navigation={navigation}
+            showPairs={false}
+          />
+        </View>
       </View>
     );
   }
@@ -78,6 +82,10 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "flex-end",
     alignItems: "center"
+  },
+  userContainer: {
+    display: "flex",
+    justifyContent: "space-between"
   }
 });
 
