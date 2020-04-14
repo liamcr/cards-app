@@ -9,12 +9,17 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
 
   const gameTypeMapping = {
     goFish: "Go Fish",
-    crazyEights: "Crazy Eights"
+    crazyEights: "Crazy Eights",
   };
 
   const gameplayScreenMapping = {
     goFish: "Go Fish Gameplay",
-    crazyEights: "Crazy Eights Gameplay"
+    crazyEights: "Crazy Eights Gameplay",
+  };
+
+  const finishedGameScreenMapping = {
+    goFish: "GameEnd Go Fish",
+    crazyEights: "GameEnd Crazy Eights",
   };
 
   const getGameStatus = () => {
@@ -33,7 +38,7 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
         navigation.navigate("Waiting Room", {
           gameId: gameId,
           name: playerName,
-          isCreator: gameData.players[0].name === playerName
+          isCreator: gameData.players[0].name === playerName,
         });
       } else if (!gameData.finished) {
         navigation.navigate(gameplayScreenMapping[gameData.game], {
@@ -41,19 +46,19 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
           name: playerName,
           shouldEnablePond:
             gameData.players[gameData.turn].name === playerName &&
-            gameData.turnState !== "choosingCard"
+            gameData.turnState !== "choosingCard",
         });
       } else {
-        navigation.navigate("GameEnd", {
+        navigation.navigate(finishedGameScreenMapping[gameData.game], {
           gameId: gameId,
-          name: playerName
+          name: playerName,
         });
       }
     }
   };
 
   if (gameData === null) {
-    getGame(gameId).then(data => {
+    getGame(gameId).then((data) => {
       setGameData(data);
     });
   }
@@ -102,43 +107,43 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     margin: 4,
     elevation: 5,
-    borderColor: "#BABABA"
+    borderColor: "#BABABA",
   },
   idAndNameContainer: {
     display: "flex",
-    flexDirection: "row"
+    flexDirection: "row",
   },
   gameId: {
-    fontSize: 16
+    fontSize: 16,
   },
   playerName: {
     fontSize: 16,
     color: "#888888",
-    marginLeft: 8
+    marginLeft: 8,
   },
   gameAndStatusContainer: {
-    marginTop: 4
+    marginTop: 4,
   },
   numPlayersContainer: {
     marginTop: 4,
     display: "flex",
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
   },
   gameStatusPlaceholder: {
     height: 16,
     width: 96,
-    backgroundColor: "#DDDDDD"
+    backgroundColor: "#DDDDDD",
   },
   numPlayersPlaceholder: {
     height: 16,
     width: 32,
     backgroundColor: "#DDDDDD",
-    marginLeft: 4
+    marginLeft: 4,
   },
   numPlayersText: {
-    marginLeft: 4
-  }
+    marginLeft: 4,
+  },
 });
 
 export default ContinueGameRow;

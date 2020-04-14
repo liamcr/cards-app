@@ -409,9 +409,36 @@ export async function playCardCE(gameId, playerName, rank, suit) {
       currentCard: { rank: rank, suit: suit },
       playerRankings: playerRankingsCopy,
       cardsPlayed:
-        docData.currentCard !== null
+        docData.currentCard !== null && docData.currentCard.rank !== "8"
           ? [...docData.cardsPlayed, docData.currentCard]
-          : [],
+          : docData.currentCard === null
+          ? []
+          : docData.cardsPlayed,
+    });
+  });
+}
+
+export async function takeCardFromHandCE(gameId, name, rank, suit) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    const docData = doc.data();
+
+    const playerIndex = docData.players.findIndex(
+      (player) => player.name === name
+    );
+
+    const playersCopy = [...docData.players];
+
+    playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
+      (card) => card.rank !== rank || card.suit !== suit
+    );
+
+    await document.update({
+      players: playersCopy,
+      cardsPlayed: [...docData.cardsPlayed, { rank: rank, suit: suit }],
     });
   });
 }
