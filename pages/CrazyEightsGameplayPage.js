@@ -49,8 +49,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             if (
               newGameState.players.filter((player) => player.hand.length > 0)
                 .length === 1 &&
-              newGameState.cardsPlayed[newGameState.cardsPlayed.length - 1]
-                .rank !== "8"
+              (newGameState.cardsPlayed.length === 0 ||
+                newGameState.cardsPlayed[newGameState.cardsPlayed.length - 1]
+                  .rank !== "8")
             ) {
               endGame(gameId);
             } else if (newGameState.players[newGameState.turn].name === name) {
@@ -64,8 +65,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                     newGameState.currentCard.suit === card.suit ||
                     card.rank === "8"
                 ).length === 0 &&
-                newGameState.cardsPlayed[newGameState.cardsPlayed.length - 1]
-                  .rank !== "8"
+                (newGameState.cardsPlayed.length === 0 ||
+                  newGameState.cardsPlayed[newGameState.cardsPlayed.length - 1]
+                    .rank !== "8")
               ) {
                 setEnableDeck(true);
                 setDrawCardModalVisible(true);

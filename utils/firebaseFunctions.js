@@ -388,9 +388,17 @@ export async function playCardCE(gameId, playerName, rank, suit) {
     const playersCopy = [...docData.players];
     let playerRankingsCopy = [...docData.playerRankings];
 
-    playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
-      (card) => card.rank !== rank || card.suit !== suit
-    );
+    console.log(docData);
+
+    if (
+      docData.cardsPlayed === null ||
+      docData.cardsPlayed.length === 0 ||
+      docData.cardsPlayed[docData.cardsPlayed.length - 1].rank !== "8"
+    ) {
+      playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
+        (card) => card.rank !== rank || card.suit !== suit
+      );
+    }
 
     if (playersCopy[playerIndex].hand.length === 0) {
       playerRankingsCopy.push(playerName);
