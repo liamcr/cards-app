@@ -29,7 +29,7 @@ export async function setLocalData(gameId, name) {
         .then(() => {
           console.log("Game added locally");
         })
-        .catch(error => {
+        .catch((error) => {
           console.error(error.message);
         });
     }
@@ -65,7 +65,7 @@ export async function isInGame(gameId) {
         inGame = true;
       }
     }
-  }).catch(reason => {
+  }).catch((reason) => {
     console.error(reason);
   });
 
@@ -78,7 +78,7 @@ export async function isInGame(gameId) {
 export async function cleanLocalStorage() {
   let cleanedStorageString = await AsyncStorage.getItem(
     "cardGamesActive"
-  ).catch(error => {
+  ).catch((error) => {
     cleanedStorageString = null;
   });
 
@@ -95,12 +95,12 @@ export async function cleanLocalStorage() {
         Object.keys(jsonStorage).slice(0, 10)
       )
       .get()
-      .then(data => {
+      .then((data) => {
         data.forEach((val, ind) => {
           newStorage[val.id] = jsonStorage[val.id];
         });
       })
-      .catch(error => {
+      .catch((error) => {
         console.log(error.message);
       });
   }
@@ -137,21 +137,40 @@ export async function resetGame(gameId) {
     .collection("liveGames")
     .doc(gameId);
 
-  await document.get().then(doc => {
+  await document.get().then((doc) => {
     const data = doc.data();
 
-    const resetPlayers = data.players.map(player => {
-      return { name: player.name, hand: [], numPairs: 0, pairedCards: [] };
-    });
+    if (data.game === "goFish") {
+      const resetPlayers = data.players.map((player) => {
+        return { name: player.name, hand: [], numPairs: 0, pairedCards: [] };
+      });
 
-    document.update({
-      finished: false,
-      started: false,
-      players: resetPlayers,
-      pond: pondTemplate,
-      gameUpdate: "Game Starting...",
-      turn: 0
-    });
+      document.update({
+        finished: false,
+        started: false,
+        players: resetPlayers,
+        pond: pondTemplate,
+        gameUpdate: "Game Starting...",
+        turn: 0,
+      });
+    } else if (data.game === "crazyEights") {
+      const resetPlayers = data.players.map((player) => {
+        return { name: player.name, hand: [] };
+      });
+
+      document.update({
+        finished: false,
+        started: false,
+        players: resetPlayers,
+        pond: pondTemplate,
+        cardsPlayed: [],
+        gameUpdate: "Game Starting...",
+        turn: 0,
+        currentCard: null,
+        playerRankings: [],
+        toPickUp: 0,
+      });
+    }
   });
 }
 
@@ -161,12 +180,12 @@ export async function leaveGame(name, gameId) {
     .collection("liveGames")
     .doc(gameId);
 
-  document.get().then(data => {
+  document.get().then((data) => {
     if (data.exists) {
       let players = data.data().players;
       let newPlayers = [];
 
-      players.forEach(player => {
+      players.forEach((player) => {
         if (player.name !== name) {
           newPlayers.push(player);
         }
@@ -186,7 +205,7 @@ export async function takeCard(gameId, playerOneName, playerTwoName, rank) {
 
   let opponentHasCard;
 
-  await document.get().then(async doc => {
+  await document.get().then(async (doc) => {
     if (doc.exists) {
       let data = doc.data();
       let updatedPlayers = data.players;
@@ -224,14 +243,14 @@ export async function takeCard(gameId, playerOneName, playerTwoName, rank) {
 
         await document.update({
           players: updatedPlayers,
-          gameUpdate: `${playerOneName} took a ${rank} from ${playerTwoName}!`
+          gameUpdate: `${playerOneName} took a ${rank} from ${playerTwoName}!`,
         });
 
         opponentHasCard = true;
       } else {
         await document.update({
           gameUpdate: `${playerOneName} asked ${playerTwoName} for a ${rank}`,
-          turnState: "fishing"
+          turnState: "fishing",
         });
 
         opponentHasCard = false;
@@ -252,7 +271,7 @@ export async function takeFromPond(gameId, name) {
 
   let cardDrawn;
 
-  await document.get().then(async doc => {
+  await document.get().then(async (doc) => {
     if (doc.exists) {
       let data = doc.data();
       let updatedGame = data;
@@ -269,12 +288,44 @@ export async function takeFromPond(gameId, name) {
 
       cardDrawn = updatedGame.pond.pop();
 
+      if (updatedGame.game === "crazyEights" && updatedGame.pond.length === 0) {
+        updatedGame.pond = shuffle([...updatedGame.cardsPlayed]);
+        updatedGame.cardsPlayed = [];
+      }
+
       updatedGame.players[playerOneIndex].hand.push(cardDrawn);
 
-      await document.update({
-        players: updatedGame.players,
-        pond: updatedGame.pond
-      });
+      if (
+        updatedGame.game === "crazyEights" &&
+        cardDrawn.rank !== updatedGame.currentCard.rank &&
+        cardDrawn.suit !== updatedGame.currentCard.suit &&
+        cardDrawn.rank !== "8"
+      ) {
+        await document.update({
+          players: updatedGame.players,
+          pond: updatedGame.pond,
+          turn: (updatedGame.turn + 1) % updatedGame.players.length,
+          gameUpdate: `It's ${
+            updatedGame.players[
+              (updatedGame.turn + 1) % updatedGame.players.length
+            ].name
+          }'s turn`,
+          cardsPlayed: updatedGame.cardsPlayed,
+        });
+      } else {
+        if (updatedGame.game === "goFish") {
+          await document.update({
+            players: updatedGame.players,
+            pond: updatedGame.pond,
+          });
+        } else if (updatedGame.game === "crazyEights") {
+          await document.update({
+            players: updatedGame.players,
+            pond: updatedGame.pond,
+            cardsPlayed: updatedGame.cardsPlayed,
+          });
+        }
+      }
     }
   });
 
@@ -286,7 +337,7 @@ export async function setTurnState(gameId, turnState) {
     .collection("liveGames")
     .doc(gameId)
     .update({
-      turnState: turnState
+      turnState: turnState,
     });
 }
 
@@ -304,8 +355,65 @@ export async function finishTurn(gameId, gameState) {
     .update({
       turn: nextTurn,
       gameUpdate: `It's ${gameState.players[nextTurn].name}'s turn`,
-      turnState: nextTurnStartingState
+      turnState: nextTurnStartingState,
     });
+}
+
+export async function finishTurnCE(gameId, gameState) {
+  const nextTurn = (gameState.turn + 1) % gameState.players.length;
+
+  await firestore()
+    .collection("liveGames")
+    .doc(gameId)
+    .update({
+      turn: nextTurn,
+      gameUpdate: `It's ${gameState.players[nextTurn].name}'s turn`,
+    });
+}
+
+export async function playCardCE(gameId, playerName, rank, suit) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    const docData = doc.data();
+
+    const nextTurn = (docData.turn + 1) % docData.players.length;
+
+    const playerIndex = docData.players.findIndex(
+      (player) => player.name === playerName
+    );
+
+    const playersCopy = [...docData.players];
+    let playerRankingsCopy = [...docData.playerRankings];
+
+    playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
+      (card) => card.rank !== rank || card.suit !== suit
+    );
+
+    if (playersCopy[playerIndex].hand.length === 0) {
+      playerRankingsCopy.push(playerName);
+
+      if (playersCopy.filter((player) => player.hand.length > 0).length === 1) {
+        playerRankingsCopy.push(
+          playersCopy.find((player) => player.hand.length > 0).name
+        );
+      }
+    }
+
+    await document.update({
+      turn: nextTurn,
+      players: playersCopy,
+      gameUpdate: `It's ${docData.players[nextTurn].name}'s turn`,
+      currentCard: { rank: rank, suit: suit },
+      playerRankings: playerRankingsCopy,
+      cardsPlayed:
+        docData.currentCard !== null
+          ? [...docData.cardsPlayed, docData.currentCard]
+          : [],
+    });
+  });
 }
 
 export async function pairUpHand(gameId, playerName) {
@@ -315,12 +423,12 @@ export async function pairUpHand(gameId, playerName) {
 
   let pairsFound = 0;
 
-  await document.get().then(async doc => {
+  await document.get().then(async (doc) => {
     if (doc.exists) {
       let data = doc.data();
 
       let playerIndex = data.players.findIndex(
-        player => player.name === playerName
+        (player) => player.name === playerName
       );
 
       let pairedCardsArr = data.players[playerIndex].pairedCards;
@@ -372,7 +480,7 @@ export async function generateRoomCode() {
     await collection
       .doc(gameId)
       .get()
-      .then(doc => {
+      .then((doc) => {
         if (doc.exists) {
           exists = true;
         } else {
@@ -403,10 +511,10 @@ export async function createGame(creatorName, gameType) {
   let gameId;
 
   await generateRoomCode()
-    .then(id => {
+    .then((id) => {
       gameId = id;
     })
-    .catch(error => {
+    .catch((error) => {
       throw error;
     });
 
@@ -421,12 +529,12 @@ export async function createGame(creatorName, gameType) {
           name: creatorName,
           numPairs: 0,
           hand: [],
-          pairedCards: []
-        }
+          pairedCards: [],
+        },
       ],
       pond: pondTemplate,
       gameUpdate: "Game Starting...",
-      turnState: "choosingCard"
+      turnState: "choosingCard",
     };
   } else if (gameType === "crazyEights") {
     gameObject = {
@@ -437,14 +545,15 @@ export async function createGame(creatorName, gameType) {
       players: [
         {
           name: creatorName,
-          hand: []
-        }
+          hand: [],
+        },
       ],
       currentCard: null,
       pond: pondTemplate,
+      cardsPlayed: [],
       gameUpdate: "Game Starting...",
       toPickUp: 0,
-      playerRankings: []
+      playerRankings: [],
     };
   }
 
@@ -455,11 +564,11 @@ export async function createGame(creatorName, gameType) {
     .then(() => {
       console.log("Game created!");
 
-      setLocalData(gameId, creatorName).catch(error => {
+      setLocalData(gameId, creatorName).catch((error) => {
         throw new Error(error);
       });
     })
-    .catch(error => {
+    .catch((error) => {
       throw new Error(error);
     });
 
@@ -482,7 +591,7 @@ export async function joinGame(name, gameId) {
 
   await document
     .get()
-    .then(async doc => {
+    .then(async (doc) => {
       let userInGame = false;
       if (doc.exists) {
         let data = doc.data();
@@ -490,9 +599,9 @@ export async function joinGame(name, gameId) {
         if (
           !data.started &&
           data.players.length < MaxPlayers[data.game] &&
-          data.players.filter(player => player.name === name).length === 0
+          data.players.filter((player) => player.name === name).length === 0
         ) {
-          await isInGame(gameId).then(inGame => {
+          await isInGame(gameId).then((inGame) => {
             if (!inGame) {
               let currentPlayers = data.players;
 
@@ -501,12 +610,12 @@ export async function joinGame(name, gameId) {
                   name: name,
                   numPairs: 0,
                   hand: [],
-                  pairedCards: []
+                  pairedCards: [],
                 });
               } else if (data.game === "crazyEights") {
                 currentPlayers.push({
                   name: name,
-                  hand: 0
+                  hand: 0,
                 });
               }
 
@@ -514,15 +623,15 @@ export async function joinGame(name, gameId) {
                 .update({ players: currentPlayers })
                 .then(() => {
                   console.log("Player added!");
-                  setLocalData(gameId, name).catch(error => {
+                  setLocalData(gameId, name).catch((error) => {
                     throw new Error(error);
                   });
                 })
-                .catch(error => {
+                .catch((error) => {
                   throw new Error(error);
                 })
 
-                .catch(error => {
+                .catch((error) => {
                   console.error("Unforseen error", error);
                 });
             } else {
@@ -539,7 +648,7 @@ export async function joinGame(name, gameId) {
           } else if (data.players.length >= MaxPlayers[data.game]) {
             throw new Error("This game is full");
           } else if (
-            data.players.filter(player => player.name === name).length >= 0
+            data.players.filter((player) => player.name === name).length >= 0
           ) {
             throw new Error(`There is already someone named ${name}`);
           }
@@ -548,7 +657,7 @@ export async function joinGame(name, gameId) {
         throw new Error("Game does not exist");
       }
     })
-    .catch(error => {
+    .catch((error) => {
       throw error;
     });
 }
@@ -558,7 +667,7 @@ export async function startGame(gameId) {
     .collection("liveGames")
     .doc(gameId);
 
-  await document.get().then(doc => {
+  await document.get().then((doc) => {
     const data = doc.data();
 
     // Shuffle deck
@@ -583,7 +692,7 @@ export async function startGame(gameId) {
         pond: shuffledPond,
         players: players,
         started: true,
-        gameUpdate: `It's ${players[0].name}'s turn`
+        gameUpdate: `It's ${players[0].name}'s turn`,
       })
       .then(() => {
         console.log("started");
@@ -614,7 +723,7 @@ export async function getGame(gameId) {
 
   await document
     .get()
-    .then(doc => {
+    .then((doc) => {
       if (doc.exists) {
         gameData = doc.data();
       } else {
@@ -622,7 +731,7 @@ export async function getGame(gameId) {
         gameData = null;
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error:", error);
       throw new Error(error);
     });

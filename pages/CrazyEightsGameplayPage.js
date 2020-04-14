@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Modal,
+  ToastAndroid,
+} from "react-native";
 import LoadingOverlay from "../components/LoadingOverlay";
 import firestore from "@react-native-firebase/firestore";
 import Deck from "../components/Deck";
@@ -7,24 +14,78 @@ import OpponentState from "../components/OpponentState";
 import UserHand from "../components/UserHand";
 import AnimatedCard from "../components/AnimatedCard";
 import UserPrompt from "../components/UserPrompt";
-import CrazyEightsPlayedCard from "../components/CrazyEightsPlayedCard";
+import Card from "../components/Card";
+import {
+  playCardCE,
+  takeFromPond,
+  finishTurnCE,
+  endGame,
+} from "../utils/firebaseFunctions";
+import theme from "../styles/theme.style";
 
 const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
   const [gameState, setGameState] = useState(null);
+  const [enableDeck, setEnableDeck] = useState(false);
+  const [drawCardModalVisible, setDrawCardModalVisible] = useState(false);
 
   useEffect(() => {
     const unsubscribe = firestore()
       .collection("liveGames")
       .doc(gameId)
-      .onSnapshot(doc => {
+      .onSnapshot((doc) => {
         if (doc.exists) {
-          setGameState(doc.data());
+          const newGameState = doc.data();
+          setGameState(newGameState);
+
+          if (newGameState.finished) {
+            navigation.replace("GameEnd Crazy Eights", {
+              gameId: gameId,
+              name: name,
+            });
+          } else {
+            if (
+              newGameState.players.filter((player) => player.hand.length > 0)
+                .length === 1
+            ) {
+              endGame(gameId);
+            } else if (newGameState.players[newGameState.turn].name === name) {
+              if (newGameState.players[newGameState.turn].hand.length === 0) {
+                finishTurnCE(gameId, newGameState);
+              } else if (
+                newGameState.currentCard !== null &&
+                newGameState.players[newGameState.turn].hand.filter(
+                  (card) =>
+                    newGameState.currentCard.rank === card.rank ||
+                    newGameState.currentCard.suit === card.suit ||
+                    card.rank === "8"
+                ).length === 0
+              ) {
+                setEnableDeck(true);
+                setDrawCardModalVisible(true);
+              }
+            }
+          }
         }
       });
 
     return () => unsubscribe();
   }, []);
+
+  const onPressCard = (rank, suit) => {
+    if (gameState.players[gameState.turn].name === name) {
+      if (
+        gameState.currentCard === null ||
+        gameState.currentCard.rank === rank ||
+        gameState.currentCard.suit === suit ||
+        rank === "8"
+      ) {
+        playCardCE(gameId, name, rank, suit);
+      } else {
+        ToastAndroid.show("You can't play that card!", ToastAndroid.SHORT);
+      }
+    }
+  };
 
   if (gameState === null) {
     return (
@@ -39,17 +100,41 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
           <View style={styles.cardsContainer}>
             <Deck
               deck={gameState.pond}
-              enabled={false}
+              enabled={enableDeck}
               onPress={() => {
-                console.log("pressed");
+                setEnableDeck(false);
+                takeFromPond(gameId, name).then((cardDrawn) => {
+                  if (
+                    gameState.currentCard !== null &&
+                    gameState.currentCard.rank !== cardDrawn.rank &&
+                    gameState.currentCard.suit !== cardDrawn.suit &&
+                    cardDrawn.rank !== "8"
+                  ) {
+                    finishTurnCE(gameId, gameState).then(() => {
+                      console.log("Turn finished");
+                    });
+                  }
+                });
               }}
               showCount={false}
             />
-            <CrazyEightsPlayedCard card={gameState.currentCard} />
+            <View>
+              <View style={styles.noCard}>
+                <Text style={styles.noCardText}>No Card Played</Text>
+              </View>
+              {gameState.currentCard !== null && (
+                <View style={styles.playedCard}>
+                  <Card
+                    rank={gameState.currentCard.rank}
+                    suit={gameState.currentCard.suit}
+                  />
+                </View>
+              )}
+            </View>
           </View>
 
           {gameState.players
-            .filter(player => player.name !== name)
+            .filter((player) => player.name !== name)
             .map((player, index) => (
               <OpponentState opponent={player} index={index} key={index} />
             ))}
@@ -57,12 +142,10 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
         <View style={styles.userContainer}>
           <UserPrompt gameState={gameState} name={name} />
           <UserHand
-            player={gameState.players.find(player => player.name === name)}
+            player={gameState.players.find((player) => player.name === name)}
             renderCard={({ item }) => (
               <TouchableOpacity
-                onPress={() => {
-                  console.log(":)");
-                }}
+                onPress={() => onPressCard(item.rank, item.suit)}
               >
                 <AnimatedCard card={item} />
               </TouchableOpacity>
@@ -71,6 +154,28 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             showPairs={false}
           />
         </View>
+        <Modal
+          visible={drawCardModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitle}>Uh Oh</Text>
+              <Text style={styles.modalBody}>
+                Looks like you don't have a card to play! Pick one up from the
+                deck!
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setDrawCardModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalClose}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -80,24 +185,70 @@ const styles = StyleSheet.create({
   gameplayContainer: {
     display: "flex",
     justifyContent: "space-between",
-    height: "100%"
+    height: "100%",
   },
   opponentContainer: {
     height: "50%",
     display: "flex",
     justifyContent: "flex-end",
-    alignItems: "center"
+    alignItems: "center",
   },
   cardsContainer: {
     display: "flex",
     flexDirection: "row",
     width: "100%",
-    justifyContent: "space-evenly"
+    justifyContent: "space-evenly",
   },
   userContainer: {
     display: "flex",
-    justifyContent: "space-between"
-  }
+    justifyContent: "space-between",
+  },
+  noCard: {
+    backgroundColor: "white",
+    height: 128,
+    width: 92,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#BABABA",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noCardText: {
+    color: "#BABABA",
+    textAlign: "center",
+  },
+  playedCard: {
+    position: "absolute",
+    marginTop: -8,
+    marginLeft: -8,
+  },
+  modalContainer: {
+    alignItems: "center",
+    flex: 1,
+    display: "flex",
+    justifyContent: "center",
+  },
+  modalView: {
+    backgroundColor: "white",
+    maxWidth: "50%",
+    padding: 10,
+    borderRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  modalBody: {
+    fontSize: 16,
+  },
+  modalClose: {
+    fontSize: 16,
+    marginTop: 4,
+    color: theme.PRIMARY_COLOUR,
+    textAlign: "center",
+  },
 });
 
 export default CrazyEightsGameplayPage;

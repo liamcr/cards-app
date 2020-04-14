@@ -12,6 +12,7 @@ import GameEnd from "./pages/GameEnd";
 import GoFishRules from "./pages/GoFishRules";
 import ContinueGame from "./pages/ContinueGame";
 import CrazyEightsGameplayPage from "./pages/CrazyEightsGameplayPage";
+import GameEndCrazyEights from "./pages/GameEndCrazyEights";
 
 const Stack = createStackNavigator();
 
@@ -31,6 +32,10 @@ const App = () => {
         <Stack.Screen name="PairedCards" component={PairedCards} />
         <Stack.Screen name="GoFishRules" component={GoFishRules} />
         <Stack.Screen name="GameEnd" component={GameEnd} />
+        <Stack.Screen
+          name="GameEnd Crazy Eights"
+          component={GameEndCrazyEights}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
