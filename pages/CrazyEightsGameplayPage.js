@@ -20,6 +20,7 @@ import {
   takeFromPond,
   finishTurnCE,
   endGame,
+  takeCardFromHandCE,
 } from "../utils/firebaseFunctions";
 import theme from "../styles/theme.style";
 
@@ -28,6 +29,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const [gameState, setGameState] = useState(null);
   const [enableDeck, setEnableDeck] = useState(false);
   const [drawCardModalVisible, setDrawCardModalVisible] = useState(false);
+  const [chooseSuitModalVisible, setChooseSuitModalVisible] = useState(false);
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -46,7 +48,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
           } else {
             if (
               newGameState.players.filter((player) => player.hand.length > 0)
-                .length === 1
+                .length === 1 &&
+              newGameState.cardsPlayed[newGameState.cardsPlayed.length - 1]
+                .rank !== "8"
             ) {
               endGame(gameId);
             } else if (newGameState.players[newGameState.turn].name === name) {
@@ -59,7 +63,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                     newGameState.currentCard.rank === card.rank ||
                     newGameState.currentCard.suit === card.suit ||
                     card.rank === "8"
-                ).length === 0
+                ).length === 0 &&
+                newGameState.cardsPlayed[newGameState.cardsPlayed.length - 1]
+                  .rank !== "8"
               ) {
                 setEnableDeck(true);
                 setDrawCardModalVisible(true);
@@ -72,15 +78,23 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
     return () => unsubscribe();
   }, []);
 
+  const onChooseSuit = (suit) => {
+    setChooseSuitModalVisible(false);
+    playCardCE(gameId, name, "8", suit);
+  };
+
   const onPressCard = (rank, suit) => {
     if (gameState.players[gameState.turn].name === name) {
       if (
-        gameState.currentCard === null ||
-        gameState.currentCard.rank === rank ||
-        gameState.currentCard.suit === suit ||
-        rank === "8"
+        (gameState.currentCard === null ||
+          gameState.currentCard.rank === rank ||
+          gameState.currentCard.suit === suit) &&
+        rank !== "8"
       ) {
         playCardCE(gameId, name, rank, suit);
+      } else if (rank === "8") {
+        setChooseSuitModalVisible(true);
+        takeCardFromHandCE(gameId, name, rank, suit);
       } else {
         ToastAndroid.show("You can't play that card!", ToastAndroid.SHORT);
       }
@@ -176,6 +190,31 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             </View>
           </View>
         </Modal>
+        <Modal
+          visible={chooseSuitModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitle}>Choose a suit:</Text>
+              <View style={styles.suitsContainer}>
+                <TouchableOpacity onPress={() => onChooseSuit("diamonds")}>
+                  <Text style={styles.modalBody}>♦</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => onChooseSuit("hearts")}>
+                  <Text style={styles.modalBody}>♥</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => onChooseSuit("spades")}>
+                  <Text style={styles.modalBody}>♠</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => onChooseSuit("clubs")}>
+                  <Text style={styles.modalBody}>♣</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -248,6 +287,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: theme.PRIMARY_COLOUR,
     textAlign: "center",
+  },
+  suitsContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-evenly",
   },
 });
 

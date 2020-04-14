@@ -31,7 +31,7 @@ const App = () => {
         />
         <Stack.Screen name="PairedCards" component={PairedCards} />
         <Stack.Screen name="GoFishRules" component={GoFishRules} />
-        <Stack.Screen name="GameEnd" component={GameEnd} />
+        <Stack.Screen name="GameEnd Go Fish" component={GameEnd} />
         <Stack.Screen
           name="GameEnd Crazy Eights"
           component={GameEndCrazyEights}
