@@ -379,7 +379,8 @@ export async function playCardCE(gameId, playerName, rank, suit) {
   await document.get().then(async (doc) => {
     const docData = doc.data();
 
-    const nextTurn = (docData.turn + 1) % docData.players.length;
+    const nextTurn =
+      (docData.turn + (rank === "J" ? 2 : 1)) % docData.players.length;
 
     const playerIndex = docData.players.findIndex(
       (player) => player.name === playerName
@@ -387,8 +388,6 @@ export async function playCardCE(gameId, playerName, rank, suit) {
 
     const playersCopy = [...docData.players];
     let playerRankingsCopy = [...docData.playerRankings];
-
-    console.log(docData);
 
     if (
       docData.cardsPlayed === null ||
