@@ -332,6 +332,32 @@ export async function takeFromPond(gameId, name) {
   return cardDrawn;
 }
 
+export async function pickUpCE(gameId, name, numToPickUp) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    let data = doc.data();
+
+    if (data.pond.length < numToPickUp) {
+      data.pond = [...data.pond, ...shuffle([...data.cardsPlayed])];
+      data.cardsPlayed = [];
+    }
+
+    data.players
+      .find((player) => player.name === name)
+      .hand.push(...data.pond.splice(0, numToPickUp));
+
+    await document.update({
+      pond: data.pond,
+      cardsPlayed: data.cardsPlayed,
+      players: data.players,
+      toPickUp: 0,
+    });
+  });
+}
+
 export async function setTurnState(gameId, turnState) {
   await firestore()
     .collection("liveGames")
@@ -379,6 +405,14 @@ export async function playCardCE(gameId, playerName, rank, suit) {
   await document.get().then(async (doc) => {
     const docData = doc.data();
 
+    let toPickUp = docData.toPickUp;
+
+    if (rank === "2") {
+      toPickUp += 2;
+    } else if (rank === "Q" && suit === "spades") {
+      toPickUp += 5;
+    }
+
     const nextTurn =
       (docData.turn + (rank === "J" ? 2 : 1)) % docData.players.length;
 
@@ -421,6 +455,7 @@ export async function playCardCE(gameId, playerName, rank, suit) {
           : docData.currentCard === null
           ? []
           : docData.cardsPlayed,
+      toPickUp: toPickUp,
     });
   });
 }

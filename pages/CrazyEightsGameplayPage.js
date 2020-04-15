@@ -21,6 +21,7 @@ import {
   finishTurnCE,
   endGame,
   takeCardFromHandCE,
+  pickUpCE,
 } from "../utils/firebaseFunctions";
 import theme from "../styles/theme.style";
 
@@ -30,6 +31,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const [enableDeck, setEnableDeck] = useState(false);
   const [drawCardModalVisible, setDrawCardModalVisible] = useState(false);
   const [chooseSuitModalVisible, setChooseSuitModalVisible] = useState(false);
+  const [pickUpModalVisible, setPickUpModalVisible] = useState(false);
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -57,6 +59,8 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             } else if (newGameState.players[newGameState.turn].name === name) {
               if (newGameState.players[newGameState.turn].hand.length === 0) {
                 finishTurnCE(gameId, newGameState);
+              } else if (newGameState.toPickUp === 5) {
+                setPickUpModalVisible(true);
               } else if (
                 newGameState.currentCard !== null &&
                 newGameState.players[newGameState.turn].hand.filter(
@@ -83,6 +87,11 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const onChooseSuit = (suit) => {
     setChooseSuitModalVisible(false);
     playCardCE(gameId, name, "8", suit);
+  };
+
+  const onPickUp = (toPickUp) => {
+    setPickUpModalVisible(false);
+    pickUpCE(gameId, name, toPickUp);
   };
 
   const onPressCard = (rank, suit) => {
@@ -188,6 +197,27 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                 }}
               >
                 <Text style={styles.modalClose}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          visible={pickUpModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitle}>Yikes</Text>
+              <Text style={styles.modalBody}>{`Looks like you have to pick up ${
+                gameState.toPickUp
+              } cards 😢`}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  onPickUp(gameState.toPickUp);
+                }}
+              >
+                <Text style={styles.modalClose}>Pick up cards</Text>
               </TouchableOpacity>
             </View>
           </View>
