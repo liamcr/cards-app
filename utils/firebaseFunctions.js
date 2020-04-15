@@ -426,7 +426,7 @@ export async function playCardCE(gameId, playerName, rank, suit) {
     if (
       docData.cardsPlayed === null ||
       docData.cardsPlayed.length === 0 ||
-      docData.cardsPlayed[docData.cardsPlayed.length - 1].rank !== "8"
+      !docData.choosingSuit
     ) {
       playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
         (card) => card.rank !== rank || card.suit !== suit
@@ -456,6 +456,7 @@ export async function playCardCE(gameId, playerName, rank, suit) {
           ? []
           : docData.cardsPlayed,
       toPickUp: toPickUp,
+      choosingSuit: false,
     });
   });
 }
@@ -481,6 +482,7 @@ export async function takeCardFromHandCE(gameId, name, rank, suit) {
     await document.update({
       players: playersCopy,
       cardsPlayed: [...docData.cardsPlayed, { rank: rank, suit: suit }],
+      choosingSuit: true,
     });
   });
 }
@@ -623,6 +625,7 @@ export async function createGame(creatorName, gameType) {
       gameUpdate: "Game Starting...",
       toPickUp: 0,
       playerRankings: [],
+      choosingSuit: false,
     };
   }
 

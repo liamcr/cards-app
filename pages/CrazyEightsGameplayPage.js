@@ -62,6 +62,13 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               } else if (newGameState.toPickUp === 5) {
                 setPickUpModalVisible(true);
               } else if (
+                newGameState.toPickUp > 0 &&
+                newGameState.players[newGameState.turn].hand.findIndex(
+                  (card) => card.rank === "2"
+                ) === -1
+              ) {
+                setPickUpModalVisible(true);
+              } else if (
                 newGameState.currentCard !== null &&
                 newGameState.players[newGameState.turn].hand.filter(
                   (card) =>
@@ -69,9 +76,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                     newGameState.currentCard.suit === card.suit ||
                     card.rank === "8"
                 ).length === 0 &&
-                (newGameState.cardsPlayed.length === 0 ||
-                  newGameState.cardsPlayed[newGameState.cardsPlayed.length - 1]
-                    .rank !== "8")
+                !newGameState.choosingSuit
               ) {
                 setEnableDeck(true);
                 setDrawCardModalVisible(true);
@@ -97,17 +102,29 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const onPressCard = (rank, suit) => {
     if (gameState.players[gameState.turn].name === name) {
       if (
-        (gameState.currentCard === null ||
-          gameState.currentCard.rank === rank ||
-          gameState.currentCard.suit === suit) &&
-        rank !== "8"
+        gameState.currentCard !== null &&
+        gameState.toPickUp > 0 &&
+        gameState.currentCard.rank === "2"
       ) {
-        playCardCE(gameId, name, rank, suit);
-      } else if (rank === "8") {
-        setChooseSuitModalVisible(true);
-        takeCardFromHandCE(gameId, name, rank, suit);
+        if (rank === "2") {
+          playCardCE(gameId, name, rank, suit);
+        } else {
+          ToastAndroid.show("You have to play your 2", ToastAndroid.SHORT);
+        }
       } else {
-        ToastAndroid.show("You can't play that card!", ToastAndroid.SHORT);
+        if (
+          (gameState.currentCard === null ||
+            gameState.currentCard.rank === rank ||
+            gameState.currentCard.suit === suit) &&
+          rank !== "8"
+        ) {
+          playCardCE(gameId, name, rank, suit);
+        } else if (rank === "8") {
+          setChooseSuitModalVisible(true);
+          takeCardFromHandCE(gameId, name, rank, suit);
+        } else {
+          ToastAndroid.show("You can't play that card!", ToastAndroid.SHORT);
+        }
       }
     }
   };
