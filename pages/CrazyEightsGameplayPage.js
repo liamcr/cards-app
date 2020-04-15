@@ -152,9 +152,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                     gameState.currentCard.suit !== cardDrawn.suit &&
                     cardDrawn.rank !== "8"
                   ) {
-                    finishTurnCE(gameId, gameState).then(() => {
-                      console.log("Turn finished");
-                    });
+                    finishTurnCE(gameId, gameState);
                   }
                 });
               }}
@@ -249,16 +247,16 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               <Text style={styles.modalTitle}>Choose a suit:</Text>
               <View style={styles.suitsContainer}>
                 <TouchableOpacity onPress={() => onChooseSuit("diamonds")}>
-                  <Text style={styles.modalBody}>♦</Text>
+                  <Text style={styles.modalSuit}>♦</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => onChooseSuit("hearts")}>
-                  <Text style={styles.modalBody}>♥</Text>
+                  <Text style={styles.modalSuit}>♥</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => onChooseSuit("spades")}>
-                  <Text style={styles.modalBody}>♠</Text>
+                  <Text style={styles.modalSuit}>♠</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => onChooseSuit("clubs")}>
-                  <Text style={styles.modalBody}>♣</Text>
+                  <Text style={styles.modalSuit}>♣</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -331,9 +329,12 @@ const styles = StyleSheet.create({
   modalBody: {
     fontSize: 16,
   },
+  modalSuit: {
+    fontSize: 16,
+  },
   modalClose: {
     fontSize: 16,
-    marginTop: 4,
+    marginTop: 8,
     color: theme.PRIMARY_COLOUR,
     textAlign: "center",
   },

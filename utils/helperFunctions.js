@@ -13,3 +13,21 @@ export function shuffle(arr) {
 
   return arr;
 }
+
+export function getNextPlayerCE(gameState, skipTurn) {
+  let playerIndex = (gameState.turn + 1) % gameState.players.length,
+    playersSkipped = 0;
+
+  while (
+    gameState.players[playerIndex].hand.length === 0 ||
+    (skipTurn ? playersSkipped !== 1 : playersSkipped !== 0)
+  ) {
+    if (gameState.players[playerIndex].hand.length > 0) {
+      playersSkipped++;
+    }
+
+    playerIndex = (playerIndex + 1) % gameState.players.length;
+  }
+
+  return playerIndex;
+}

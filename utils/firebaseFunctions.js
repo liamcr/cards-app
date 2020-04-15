@@ -3,7 +3,7 @@ import firestore from "@react-native-firebase/firestore";
 import pondTemplate from "../utils/pondTemplate.json";
 import AsyncStorage from "@react-native-community/async-storage";
 import MaxPlayers from "./gameMaxPlayers.json";
-import { shuffle } from "./helperFunctions";
+import { shuffle, getNextPlayerCE } from "./helperFunctions";
 
 /* 
   Saves game locally, so that the app can remember that the user
@@ -341,7 +341,7 @@ export async function pickUpCE(gameId, name, numToPickUp) {
     let data = doc.data();
 
     if (data.pond.length < numToPickUp) {
-      data.pond = [...data.pond, ...shuffle([...data.cardsPlayed])];
+      data.pond = [...shuffle([...data.cardsPlayed]), ...data.pond];
       data.cardsPlayed = [];
     }
 
@@ -413,8 +413,7 @@ export async function playCardCE(gameId, playerName, rank, suit) {
       toPickUp += 5;
     }
 
-    const nextTurn =
-      (docData.turn + (rank === "J" ? 2 : 1)) % docData.players.length;
+    const nextTurn = getNextPlayerCE(docData, rank === "J");
 
     const playerIndex = docData.players.findIndex(
       (player) => player.name === playerName
