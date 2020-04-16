@@ -10,7 +10,6 @@ import {
 import LoadingOverlay from "../components/LoadingOverlay";
 import firestore from "@react-native-firebase/firestore";
 import Deck from "../components/Deck";
-import OpponentState from "../components/OpponentState";
 import UserHand from "../components/UserHand";
 import AnimatedCard from "../components/AnimatedCard";
 import UserPrompt from "../components/UserPrompt";
@@ -144,6 +143,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             <Deck
               deck={gameState.pond}
               enabled={enableDeck}
+              gameId={gameId}
+              name={name}
+              numPlayers={gameState.players.length}
               onPress={() => {
                 setEnableDeck(false);
                 takeFromPond(gameId, name).then((cardDrawn) => {

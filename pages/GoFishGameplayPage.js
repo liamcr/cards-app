@@ -181,6 +181,9 @@ const GoFishGameplayPage = ({ route, navigation }) => {
           <Deck
             deck={gameState.pond}
             enabled={enablePond}
+            gameId={gameId}
+            name={name}
+            numPlayers={gameState.players.length}
             showCount
             onPress={() => {
               setEnablePond(false);

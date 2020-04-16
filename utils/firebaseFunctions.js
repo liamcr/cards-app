@@ -169,6 +169,7 @@ export async function resetGame(gameId) {
         currentCard: null,
         playerRankings: [],
         toPickUp: 0,
+        mostRecentMove: [],
       });
     }
   });
@@ -311,6 +312,7 @@ export async function takeFromPond(gameId, name) {
             ].name
           }'s turn`,
           cardsPlayed: updatedGame.cardsPlayed,
+          mostRecentMove: [name, "pickUp"],
         });
       } else {
         if (updatedGame.game === "goFish") {
@@ -323,6 +325,7 @@ export async function takeFromPond(gameId, name) {
             players: updatedGame.players,
             pond: updatedGame.pond,
             cardsPlayed: updatedGame.cardsPlayed,
+            mostRecentMove: [name, "pickUp"],
           });
         }
       }
@@ -354,6 +357,7 @@ export async function pickUpCE(gameId, name, numToPickUp) {
       cardsPlayed: data.cardsPlayed,
       players: data.players,
       toPickUp: 0,
+      mostRecentMove: [name, "pickUp"],
     });
   });
 }
@@ -386,7 +390,7 @@ export async function finishTurn(gameId, gameState) {
 }
 
 export async function finishTurnCE(gameId, gameState) {
-  const nextTurn = (gameState.turn + 1) % gameState.players.length;
+  const nextTurn = getNextPlayerCE(gameState, false);
 
   await firestore()
     .collection("liveGames")
@@ -394,6 +398,7 @@ export async function finishTurnCE(gameId, gameState) {
     .update({
       turn: nextTurn,
       gameUpdate: `It's ${gameState.players[nextTurn].name}'s turn`,
+      mostRecentMove: [],
     });
 }
 
@@ -456,6 +461,7 @@ export async function playCardCE(gameId, playerName, rank, suit) {
           : docData.cardsPlayed,
       toPickUp: toPickUp,
       choosingSuit: false,
+      mostRecentMove: [playerName, "playCard"],
     });
   });
 }
@@ -625,6 +631,7 @@ export async function createGame(creatorName, gameType) {
       toPickUp: 0,
       playerRankings: [],
       choosingSuit: false,
+      mostRecentMove: [],
     };
   }
 
@@ -775,7 +782,7 @@ export async function endGame(gameId) {
   await firestore()
     .collection("liveGames")
     .doc(gameId)
-    .update({ finished: true });
+    .update({ finished: true, mostRecentMove: [] });
 }
 
 /* 

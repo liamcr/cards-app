@@ -1,18 +1,242 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Animated,
   View,
   TouchableWithoutFeedback,
   Text,
   StyleSheet,
-  Easing,
-  useWindowDimensions
+  useWindowDimensions,
 } from "react-native";
+import firestore from "@react-native-firebase/firestore";
 
-const Deck = ({ onPress, enabled, deck, showCount }) => {
+const Deck = ({
+  onPress,
+  enabled,
+  deck,
+  showCount,
+  gameId,
+  name,
+  numPlayers,
+}) => {
   const [yOffset] = useState(new Animated.Value(-2));
+  const [xOffset] = useState(new Animated.Value(-2));
+  const [opacity] = useState(new Animated.Value(1));
+  const [scale] = useState(new Animated.Value(1));
   const [animating, setAnimating] = useState(false);
-  const offsetMax = useWindowDimensions().height * 0.8;
+  const screenHeight = useWindowDimensions().height;
+  const screenWidth = useWindowDimensions().width;
+  const offsetMax = screenHeight * 0.8;
+
+  const yOffsets = {
+    top: 107 - 0.5 * screenHeight,
+    center: 156 - 0.5 * screenHeight,
+    bottom: 260 - 0.5 * screenHeight,
+  };
+
+  const xOffsets = {
+    center: (1 / 15) * screenWidth + 26,
+    left: (-17 / 60) * screenWidth + 26,
+    right: (31 / 60) * screenWidth + 26,
+  };
+
+  const turnsAway = (currentPlayerIndex, opponentIndex) => {
+    if (opponentIndex < currentPlayerIndex) {
+      return numPlayers - currentPlayerIndex + opponentIndex;
+    } else {
+      return opponentIndex - currentPlayerIndex;
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = firestore()
+      .collection("liveGames")
+      .doc(gameId)
+      .onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+
+          if (
+            data.game === "crazyEights" &&
+            data.mostRecentMove.length > 0 &&
+            !data.choosingSuit
+          ) {
+            let opponentIndex = data.players.findIndex(
+              (player) => player.name === data.mostRecentMove[0]
+            );
+            let playerIndex = data.players.findIndex(
+              (player) => player.name === name
+            );
+
+            if (
+              opponentIndex !== playerIndex &&
+              playerIndex !== -1 &&
+              opponentIndex !== -1
+            ) {
+              let numTurnsAway = turnsAway(playerIndex, opponentIndex);
+
+              if (data.mostRecentMove[1] === "pickUp") {
+                if (numPlayers === 2 * numTurnsAway) {
+                  setAnimating(true);
+                  Animated.parallel([
+                    Animated.timing(yOffset, {
+                      toValue: yOffsets.top,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(scale, {
+                      toValue: 0.2,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(xOffset, {
+                      toValue: xOffsets.center,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(opacity, {
+                      toValue: 0,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                  ]).start(() => {
+                    yOffset.setValue(-2);
+                    scale.setValue(1);
+                    xOffset.setValue(-2);
+                    opacity.setValue(1);
+                    setAnimating(false);
+                  });
+                } else if (numTurnsAway === 1 && numPlayers >= 4) {
+                  Animated.parallel([
+                    Animated.timing(yOffset, {
+                      toValue: yOffsets.bottom,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(scale, {
+                      toValue: 0.2,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(xOffset, {
+                      toValue: xOffsets.left,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(opacity, {
+                      toValue: 0,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                  ]).start(() => {
+                    scale.setValue(1);
+                    yOffset.setValue(-2);
+                    opacity.setValue(1);
+                    xOffset.setValue(-2);
+                    setAnimating(false);
+                  });
+                } else if (numTurnsAway === numPlayers - 1 && numPlayers > 4) {
+                  Animated.parallel([
+                    Animated.timing(yOffset, {
+                      toValue: yOffsets.bottom,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(scale, {
+                      toValue: 0.2,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(xOffset, {
+                      toValue: xOffsets.right,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(opacity, {
+                      toValue: 0,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                  ]).start(() => {
+                    scale.setValue(1);
+                    yOffset.setValue(-2);
+                    opacity.setValue(1);
+                    xOffset.setValue(-2);
+                    setAnimating(false);
+                  });
+                } else if (
+                  (numPlayers === 3 && numTurnsAway === 1) ||
+                  ((numPlayers === 5 || numPlayers === 6) && numTurnsAway === 2)
+                ) {
+                  Animated.parallel([
+                    Animated.timing(yOffset, {
+                      toValue: yOffsets.center,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(scale, {
+                      toValue: 0.2,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(xOffset, {
+                      toValue: xOffsets.left,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(opacity, {
+                      toValue: 0,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                  ]).start(() => {
+                    scale.setValue(1);
+                    yOffset.setValue(-2);
+                    opacity.setValue(1);
+                    xOffset.setValue(-2);
+                    setAnimating(false);
+                  });
+                } else if (
+                  (numPlayers === 3 && numTurnsAway === 2) ||
+                  ((numPlayers === 5 || numPlayers === 6) &&
+                    numTurnsAway === numPlayers - 2)
+                ) {
+                  Animated.parallel([
+                    Animated.timing(yOffset, {
+                      toValue: yOffsets.center,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(scale, {
+                      toValue: 0.2,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(xOffset, {
+                      toValue: xOffsets.right,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(opacity, {
+                      toValue: 0,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                  ]).start(() => {
+                    scale.setValue(1);
+                    yOffset.setValue(-2);
+                    opacity.setValue(1);
+                    xOffset.setValue(-2);
+                    setAnimating(false);
+                  });
+                }
+              }
+            }
+          }
+        }
+      });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <View style={styles.deckContainer}>
@@ -25,7 +249,7 @@ const Deck = ({ onPress, enabled, deck, showCount }) => {
               Animated.timing(yOffset, {
                 toValue: offsetMax,
                 duration: 300,
-                useNativeDriver: true
+                useNativeDriver: true,
               }).start(() => {
                 yOffset.setValue(-2);
                 setAnimating(false);
@@ -39,10 +263,19 @@ const Deck = ({ onPress, enabled, deck, showCount }) => {
               ...styles.cardBackLarge,
               transform: [
                 {
-                  translateY: yOffset
-                }
+                  translateY: yOffset,
+                },
+                {
+                  translateX: xOffset,
+                },
+                {
+                  scaleX: scale,
+                },
+                {
+                  scaleY: scale,
+                },
               ],
-              marginLeft: -2
+              opacity: opacity,
             }}
           />
         </TouchableWithoutFeedback>
@@ -56,7 +289,7 @@ const Deck = ({ onPress, enabled, deck, showCount }) => {
 const styles = StyleSheet.create({
   deckContainer: {
     display: "flex",
-    alignItems: "center"
+    alignItems: "center",
   },
   cardBackLarge: {
     height: 128,
@@ -64,12 +297,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 4,
     backgroundColor: "red",
-    borderColor: "white"
+    borderColor: "white",
   },
   deckCount: {
     fontSize: 32,
-    marginTop: 8
-  }
+    marginTop: 8,
+  },
 });
 
 export default Deck;
