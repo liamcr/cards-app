@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
-const OpponentState = ({ opponent, index }) => {
+const OpponentState = ({ opponent, styleName }) => {
   return (
-    <View style={styles[`opponentContainer${index + 1}`]}>
+    <View style={styles[styleName]}>
       <Text style={styles.opponentName}>{opponent.name}</Text>
       <View style={styles.cardCountContainer}>
         <View style={styles.cardBack} />
@@ -14,31 +14,31 @@ const OpponentState = ({ opponent, index }) => {
 };
 
 const styles = StyleSheet.create({
-  opponentContainer1: {
+  opponentContainerC: {
     alignSelf: "flex-start",
     position: "absolute",
     left: "40%",
     top: 0,
   },
-  opponentContainer2: {
+  opponentContainerNW: {
     alignSelf: "flex-start",
     position: "absolute",
     left: "5%",
     top: 48,
   },
-  opponentContainer3: {
+  opponentContainerNE: {
     alignSelf: "flex-start",
     position: "absolute",
     right: "5%",
     top: 48,
   },
-  opponentContainer4: {
+  opponentContainerW: {
     alignSelf: "flex-start",
     position: "absolute",
     left: "5%",
     top: 152,
   },
-  opponentContainer5: {
+  opponentContainerE: {
     alignSelf: "flex-start",
     position: "absolute",
     right: "5%",

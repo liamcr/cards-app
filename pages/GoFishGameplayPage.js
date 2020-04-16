@@ -21,7 +21,7 @@ import firestore from "@react-native-firebase/firestore";
 import AskOverlay from "../components/AskOverlay";
 import UserHand from "../components/UserHand";
 import Deck from "../components/Deck";
-import OpponentState from "../components/OpponentState";
+import OpponentStateContainer from "../components/OpponentStateContainer";
 import UserPrompt from "../components/UserPrompt";
 import theme from "../styles/theme.style";
 import InfoIcon from "../assets/infoIcon.png";
@@ -205,11 +205,12 @@ const GoFishGameplayPage = ({ route, navigation }) => {
               });
             }}
           />
-          {gameState.players
-            .filter((player) => player.name !== name)
-            .map((player, index) => (
-              <OpponentState opponent={player} index={index} key={index} />
-            ))}
+          <OpponentStateContainer
+            userIndex={gameState.players.findIndex(
+              (player) => player.name === name
+            )}
+            playerArr={gameState.players}
+          />
         </View>
         <View style={styles.userContainer}>
           <UserPrompt

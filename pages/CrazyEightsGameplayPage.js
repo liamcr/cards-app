@@ -24,6 +24,7 @@ import {
   pickUpCE,
 } from "../utils/firebaseFunctions";
 import theme from "../styles/theme.style";
+import OpponentStateContainer from "../components/OpponentStateContainer";
 
 const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -173,11 +174,12 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             </View>
           </View>
 
-          {gameState.players
-            .filter((player) => player.name !== name)
-            .map((player, index) => (
-              <OpponentState opponent={player} index={index} key={index} />
-            ))}
+          <OpponentStateContainer
+            userIndex={gameState.players.findIndex(
+              (player) => player.name === name
+            )}
+            playerArr={gameState.players}
+          />
         </View>
         <View style={styles.userContainer}>
           <UserPrompt gameState={gameState} name={name} />
