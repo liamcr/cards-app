@@ -14,7 +14,7 @@ const Deck = ({
   enabled,
   deck,
   showCount,
-  gameId,
+  gameState,
   name,
   numPlayers,
 }) => {
@@ -48,195 +48,184 @@ const Deck = ({
   };
 
   useEffect(() => {
-    const unsubscribe = firestore()
-      .collection("liveGames")
-      .doc(gameId)
-      .onSnapshot((doc) => {
-        if (doc.exists) {
-          const data = doc.data();
+    if (
+      gameState.game === "crazyEights" &&
+      gameState.mostRecentMove.length > 0 &&
+      !gameState.choosingSuit
+    ) {
+      let opponentIndex = gameState.players.findIndex(
+        (player) => player.name === gameState.mostRecentMove[0]
+      );
+      let playerIndex = gameState.players.findIndex(
+        (player) => player.name === name
+      );
 
-          if (
-            data.game === "crazyEights" &&
-            data.mostRecentMove.length > 0 &&
-            !data.choosingSuit
+      if (
+        opponentIndex !== playerIndex &&
+        playerIndex !== -1 &&
+        opponentIndex !== -1
+      ) {
+        let numTurnsAway = turnsAway(playerIndex, opponentIndex);
+
+        if (gameState.mostRecentMove[1] === "pickUp") {
+          if (numPlayers === 2 * numTurnsAway) {
+            setAnimating(true);
+            Animated.parallel([
+              Animated.timing(yOffset, {
+                toValue: yOffsets.top,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scale, {
+                toValue: 0.2,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(xOffset, {
+                toValue: xOffsets.center,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              yOffset.setValue(-2);
+              scale.setValue(1);
+              xOffset.setValue(-2);
+              opacity.setValue(1);
+              setAnimating(false);
+            });
+          } else if (numTurnsAway === 1 && numPlayers >= 4) {
+            Animated.parallel([
+              Animated.timing(yOffset, {
+                toValue: yOffsets.bottom,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scale, {
+                toValue: 0.2,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(xOffset, {
+                toValue: xOffsets.left,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              scale.setValue(1);
+              yOffset.setValue(-2);
+              opacity.setValue(1);
+              xOffset.setValue(-2);
+              setAnimating(false);
+            });
+          } else if (numTurnsAway === numPlayers - 1 && numPlayers > 4) {
+            Animated.parallel([
+              Animated.timing(yOffset, {
+                toValue: yOffsets.bottom,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scale, {
+                toValue: 0.2,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(xOffset, {
+                toValue: xOffsets.right,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              scale.setValue(1);
+              yOffset.setValue(-2);
+              opacity.setValue(1);
+              xOffset.setValue(-2);
+              setAnimating(false);
+            });
+          } else if (
+            (numPlayers === 3 && numTurnsAway === 1) ||
+            ((numPlayers === 5 || numPlayers === 6) && numTurnsAway === 2)
           ) {
-            let opponentIndex = data.players.findIndex(
-              (player) => player.name === data.mostRecentMove[0]
-            );
-            let playerIndex = data.players.findIndex(
-              (player) => player.name === name
-            );
-
-            if (
-              opponentIndex !== playerIndex &&
-              playerIndex !== -1 &&
-              opponentIndex !== -1
-            ) {
-              let numTurnsAway = turnsAway(playerIndex, opponentIndex);
-
-              if (data.mostRecentMove[1] === "pickUp") {
-                if (numPlayers === 2 * numTurnsAway) {
-                  setAnimating(true);
-                  Animated.parallel([
-                    Animated.timing(yOffset, {
-                      toValue: yOffsets.top,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(scale, {
-                      toValue: 0.2,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(xOffset, {
-                      toValue: xOffsets.center,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(opacity, {
-                      toValue: 0,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                  ]).start(() => {
-                    yOffset.setValue(-2);
-                    scale.setValue(1);
-                    xOffset.setValue(-2);
-                    opacity.setValue(1);
-                    setAnimating(false);
-                  });
-                } else if (numTurnsAway === 1 && numPlayers >= 4) {
-                  Animated.parallel([
-                    Animated.timing(yOffset, {
-                      toValue: yOffsets.bottom,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(scale, {
-                      toValue: 0.2,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(xOffset, {
-                      toValue: xOffsets.left,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(opacity, {
-                      toValue: 0,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                  ]).start(() => {
-                    scale.setValue(1);
-                    yOffset.setValue(-2);
-                    opacity.setValue(1);
-                    xOffset.setValue(-2);
-                    setAnimating(false);
-                  });
-                } else if (numTurnsAway === numPlayers - 1 && numPlayers > 4) {
-                  Animated.parallel([
-                    Animated.timing(yOffset, {
-                      toValue: yOffsets.bottom,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(scale, {
-                      toValue: 0.2,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(xOffset, {
-                      toValue: xOffsets.right,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(opacity, {
-                      toValue: 0,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                  ]).start(() => {
-                    scale.setValue(1);
-                    yOffset.setValue(-2);
-                    opacity.setValue(1);
-                    xOffset.setValue(-2);
-                    setAnimating(false);
-                  });
-                } else if (
-                  (numPlayers === 3 && numTurnsAway === 1) ||
-                  ((numPlayers === 5 || numPlayers === 6) && numTurnsAway === 2)
-                ) {
-                  Animated.parallel([
-                    Animated.timing(yOffset, {
-                      toValue: yOffsets.center,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(scale, {
-                      toValue: 0.2,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(xOffset, {
-                      toValue: xOffsets.left,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(opacity, {
-                      toValue: 0,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                  ]).start(() => {
-                    scale.setValue(1);
-                    yOffset.setValue(-2);
-                    opacity.setValue(1);
-                    xOffset.setValue(-2);
-                    setAnimating(false);
-                  });
-                } else if (
-                  (numPlayers === 3 && numTurnsAway === 2) ||
-                  ((numPlayers === 5 || numPlayers === 6) &&
-                    numTurnsAway === numPlayers - 2)
-                ) {
-                  Animated.parallel([
-                    Animated.timing(yOffset, {
-                      toValue: yOffsets.center,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(scale, {
-                      toValue: 0.2,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(xOffset, {
-                      toValue: xOffsets.right,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                    Animated.timing(opacity, {
-                      toValue: 0,
-                      duration: 300,
-                      useNativeDriver: true,
-                    }),
-                  ]).start(() => {
-                    scale.setValue(1);
-                    yOffset.setValue(-2);
-                    opacity.setValue(1);
-                    xOffset.setValue(-2);
-                    setAnimating(false);
-                  });
-                }
-              }
-            }
+            Animated.parallel([
+              Animated.timing(yOffset, {
+                toValue: yOffsets.center,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scale, {
+                toValue: 0.2,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(xOffset, {
+                toValue: xOffsets.left,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              scale.setValue(1);
+              yOffset.setValue(-2);
+              opacity.setValue(1);
+              xOffset.setValue(-2);
+              setAnimating(false);
+            });
+          } else if (
+            (numPlayers === 3 && numTurnsAway === 2) ||
+            ((numPlayers === 5 || numPlayers === 6) &&
+              numTurnsAway === numPlayers - 2)
+          ) {
+            Animated.parallel([
+              Animated.timing(yOffset, {
+                toValue: yOffsets.center,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scale, {
+                toValue: 0.2,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(xOffset, {
+                toValue: xOffsets.right,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              scale.setValue(1);
+              yOffset.setValue(-2);
+              opacity.setValue(1);
+              xOffset.setValue(-2);
+              setAnimating(false);
+            });
           }
         }
-      });
-
-    return () => unsubscribe();
-  }, []);
+      }
+    }
+  }, [gameState]);
 
   return (
     <View style={styles.deckContainer}>

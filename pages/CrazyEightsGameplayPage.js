@@ -143,7 +143,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             <Deck
               deck={gameState.pond}
               enabled={enableDeck}
-              gameId={gameId}
+              gameState={gameState}
               name={name}
               numPlayers={gameState.players.length}
               onPress={() => {
