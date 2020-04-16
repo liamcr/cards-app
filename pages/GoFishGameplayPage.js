@@ -210,6 +210,7 @@ const GoFishGameplayPage = ({ route, navigation }) => {
               (player) => player.name === name
             )}
             playerArr={gameState.players}
+            gameState={gameState}
           />
         </View>
         <View style={styles.userContainer}>

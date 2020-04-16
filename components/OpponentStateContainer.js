@@ -1,7 +1,7 @@
 import React from "react";
 import OpponentState from "./OpponentState";
 
-const OpponentStateContainer = ({ userIndex, playerArr }) => {
+const OpponentStateContainer = ({ userIndex, playerArr, gameState }) => {
   const numOpponents = playerArr.length - 1;
   let opponentStates = {};
   let opponentsAdded = 0;
@@ -71,6 +71,7 @@ const OpponentStateContainer = ({ userIndex, playerArr }) => {
         <OpponentState
           opponent={playerArr[parseInt(index)]}
           styleName={opponentStates[index]}
+          gameState={gameState}
           key={index}
         />
       ))}
