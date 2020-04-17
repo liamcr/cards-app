@@ -32,6 +32,17 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const [drawCardModalVisible, setDrawCardModalVisible] = useState(false);
   const [chooseSuitModalVisible, setChooseSuitModalVisible] = useState(false);
   const [pickUpModalVisible, setPickUpModalVisible] = useState(false);
+  const [finishedGameModalVisible, setFinishedGameModalVisible] = useState(
+    false
+  );
+
+  const rankingToEmoji = {
+    "1st": "🥇",
+    "2nd": "🥈",
+    "3rd": "🥉",
+    "4th": "",
+    "5th": "",
+  };
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -83,12 +94,23 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               }
 
               if (
-                newGameState.mostRecentMove.length > 0 &&
+                newGameState.mostRecentMove.length === 0 ||
                 (newGameState.mostRecentMove[0] !== name ||
                   newGameState.mostRecentMove[1] === "playCard")
               ) {
                 setEnableDeck(true);
               }
+            }
+            if (
+              newGameState.mostRecentMove.length > 0 &&
+              newGameState.mostRecentMove[0] === name &&
+              newGameState.mostRecentMove[1] === "playCard" &&
+              newGameState.players.find((player) => player.name === name).hand
+                .length === 0 &&
+              newGameState.playerRankings.length <=
+                newGameState.players.length - 2
+            ) {
+              setFinishedGameModalVisible(true);
             }
           }
         }
@@ -106,6 +128,20 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const onPickUp = (toPickUp) => {
     setPickUpModalVisible(false);
     pickUpCE(gameId, name, toPickUp);
+  };
+
+  const getPlacementText = () => {
+    const ranking = gameState.playerRankings.findIndex(
+      (player) => player === name
+    );
+
+    const rankingText = ["1st", "2nd", "3rd", "4th", "5th"];
+
+    if (ranking === -1) {
+      return "";
+    } else {
+      return rankingText[ranking];
+    }
   };
 
   const onPressCard = (rank, suit) => {
@@ -160,22 +196,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               numPlayers={gameState.players.length}
               onPress={() => {
                 setEnableDeck(false);
-                takeFromPond(gameId, name).then((cardDrawn) => {
-                  if (
-                    gameState.currentCard !== null &&
-                    ((gameState.currentCard.rank !== cardDrawn.rank &&
-                      gameState.currentCard.suit !== cardDrawn.suit &&
-                      cardDrawn.rank !== "8") ||
-                      gameState.players[gameState.turn].hand.filter(
-                        (card) =>
-                          gameState.currentCard.rank === card.rank ||
-                          gameState.currentCard.suit === card.suit ||
-                          card.rank === "8"
-                      ).length === 0)
-                  ) {
-                    finishTurnCE(gameId, gameState);
-                  }
-                });
+                takeFromPond(gameId, name);
               }}
               showCount={false}
             />
@@ -277,6 +298,29 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             </View>
           </View>
         </Modal>
+        <Modal
+          visible={finishedGameModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitle}>{`Congratulations! ${
+                rankingToEmoji[getPlacementText()]
+              }🎉`}</Text>
+              <Text
+                style={styles.modalBody}
+              >{`You finished ${getPlacementText()}! Sit tight and wait for the others to finish up!`}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setFinishedGameModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalClose}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -317,7 +361,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     backgroundColor: "white",
-    maxWidth: "50%",
+    maxWidth: "60%",
     padding: 10,
     borderRadius: 4,
     elevation: 5,

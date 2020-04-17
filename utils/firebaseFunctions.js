@@ -298,18 +298,23 @@ export async function takeFromPond(gameId, name) {
 
       if (
         updatedGame.game === "crazyEights" &&
+        updatedGame.currentCard !== null &&
         cardDrawn.rank !== updatedGame.currentCard.rank &&
         cardDrawn.suit !== updatedGame.currentCard.suit &&
-        cardDrawn.rank !== "8"
+        cardDrawn.rank !== "8" &&
+        updatedGame.players[updatedGame.turn].hand.filter(
+          (card) =>
+            updatedGame.currentCard.rank === card.rank ||
+            updatedGame.currentCard.suit === card.suit ||
+            card.rank === "8"
+        ).length === 0
       ) {
         await document.update({
           players: updatedGame.players,
           pond: updatedGame.pond,
-          turn: (updatedGame.turn + 1) % updatedGame.players.length,
+          turn: getNextPlayerCE(updatedGame, false),
           gameUpdate: `It's ${
-            updatedGame.players[
-              (updatedGame.turn + 1) % updatedGame.players.length
-            ].name
+            updatedGame.players[getNextPlayerCE(updatedGame, false)].name
           }'s turn`,
           cardsPlayed: updatedGame.cardsPlayed,
           mostRecentMove: [name, "pickUp"],
