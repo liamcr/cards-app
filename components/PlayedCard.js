@@ -2,40 +2,36 @@ import React, { useState, useEffect } from "react";
 import {
   Animated,
   View,
-  TouchableWithoutFeedback,
   Text,
   StyleSheet,
   useWindowDimensions,
 } from "react-native";
+import Card from "./Card";
 
-const Deck = ({
-  onPress,
-  enabled,
-  deck,
-  showCount,
-  gameState,
-  name,
-  numPlayers,
-}) => {
-  const [yOffset] = useState(new Animated.Value(-2));
-  const [xOffset] = useState(new Animated.Value(-2));
-  const [opacity] = useState(new Animated.Value(1));
-  const [scale] = useState(new Animated.Value(1));
-  const [animating, setAnimating] = useState(false);
+const PlayedCard = ({ gameState, name, numPlayers }) => {
+  const [currentCard, setCurrentCard] = useState(gameState.currentCard);
+  const [previousCard, setPreviousCard] = useState(gameState.currentCard);
+
+  const [yOffset] = useState(new Animated.Value(0));
+  const [xOffset] = useState(new Animated.Value(0));
+  const [scale] = useState(new Animated.Value(0.2));
+  const [opacity] = useState(new Animated.Value(0));
+
   const screenHeight = useWindowDimensions().height;
   const screenWidth = useWindowDimensions().width;
-  const offsetMax = screenHeight * 0.8;
 
   const yOffsets = {
     top: 107 - 0.5 * screenHeight,
     center: 156 - 0.5 * screenHeight,
     bottom: 260 - 0.5 * screenHeight,
+    self: screenHeight,
   };
 
   const xOffsets = {
-    center: (1 / 15) * screenWidth + 26,
-    left: (-17 / 60) * screenWidth + 26,
-    right: (31 / 60) * screenWidth + 26,
+    center: (-4 / 15) * screenWidth - 13,
+    left: (-37 / 60) * screenWidth - 13,
+    right: (11 / 60) * screenWidth - 13,
+    self: 0,
   };
 
   const turnsAway = (currentPlayerIndex, opponentIndex) => {
@@ -48,11 +44,12 @@ const Deck = ({
 
   useEffect(() => {
     if (
-      gameState.game === "crazyEights" &&
       gameState.mostRecentMove.length > 0 &&
       !gameState.choosingSuit &&
-      gameState.mostRecentMove[1] === "pickUp"
+      gameState.mostRecentMove[1] === "playCard"
     ) {
+      setCurrentCard(gameState.currentCard);
+
       let opponentIndex = gameState.players.findIndex(
         (player) => player.name === gameState.mostRecentMove[0]
       );
@@ -60,165 +57,195 @@ const Deck = ({
         (player) => player.name === name
       );
 
-      if (
-        opponentIndex !== playerIndex &&
-        playerIndex !== -1 &&
-        opponentIndex !== -1
-      ) {
+      if (playerIndex !== -1 && opponentIndex !== -1) {
         let numTurnsAway = turnsAway(playerIndex, opponentIndex);
 
-        if (numPlayers === 2 * numTurnsAway) {
-          setAnimating(true);
+        if (playerIndex === opponentIndex) {
+          yOffset.setValue(yOffsets.self);
+          xOffset.setValue(xOffsets.self);
+
           Animated.parallel([
             Animated.timing(yOffset, {
-              toValue: yOffsets.top,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scale, {
-              toValue: 0.2,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(xOffset, {
-              toValue: xOffsets.center,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
               toValue: 0,
               duration: 300,
               useNativeDriver: true,
             }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
           ]).start(() => {
-            yOffset.setValue(-2);
-            scale.setValue(1);
-            xOffset.setValue(-2);
-            opacity.setValue(1);
-            setAnimating(false);
+            setPreviousCard(gameState.currentCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
+          });
+        } else if (numPlayers === 2 * numTurnsAway) {
+          yOffset.setValue(yOffsets.top);
+          xOffset.setValue(xOffsets.center);
+
+          Animated.parallel([
+            Animated.timing(yOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            setPreviousCard(gameState.currentCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
           });
         } else if (numTurnsAway === 1 && numPlayers >= 4) {
+          yOffset.setValue(yOffsets.bottom);
+          xOffset.setValue(xOffsets.left);
+
           Animated.parallel([
             Animated.timing(yOffset, {
-              toValue: yOffsets.bottom,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scale, {
-              toValue: 0.2,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(xOffset, {
-              toValue: xOffsets.left,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
               toValue: 0,
               duration: 300,
               useNativeDriver: true,
             }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
           ]).start(() => {
-            scale.setValue(1);
-            yOffset.setValue(-2);
-            opacity.setValue(1);
-            xOffset.setValue(-2);
-            setAnimating(false);
+            setPreviousCard(gameState.currentCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
           });
         } else if (numTurnsAway === numPlayers - 1 && numPlayers >= 4) {
+          yOffset.setValue(yOffsets.bottom);
+          xOffset.setValue(xOffsets.right);
+
           Animated.parallel([
             Animated.timing(yOffset, {
-              toValue: yOffsets.bottom,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scale, {
-              toValue: 0.2,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(xOffset, {
-              toValue: xOffsets.right,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
               toValue: 0,
               duration: 300,
               useNativeDriver: true,
             }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
           ]).start(() => {
-            scale.setValue(1);
-            yOffset.setValue(-2);
-            opacity.setValue(1);
-            xOffset.setValue(-2);
-            setAnimating(false);
+            setPreviousCard(gameState.currentCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
           });
         } else if (
           (numPlayers === 3 && numTurnsAway === 1) ||
           ((numPlayers === 5 || numPlayers === 6) && numTurnsAway === 2)
         ) {
+          yOffset.setValue(yOffsets.center);
+          xOffset.setValue(xOffsets.left);
+
           Animated.parallel([
             Animated.timing(yOffset, {
-              toValue: yOffsets.center,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scale, {
-              toValue: 0.2,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(xOffset, {
-              toValue: xOffsets.left,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
               toValue: 0,
               duration: 300,
               useNativeDriver: true,
             }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
           ]).start(() => {
-            scale.setValue(1);
-            yOffset.setValue(-2);
-            opacity.setValue(1);
-            xOffset.setValue(-2);
-            setAnimating(false);
+            setPreviousCard(gameState.currentCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
           });
         } else if (
           (numPlayers === 3 && numTurnsAway === 2) ||
           ((numPlayers === 5 || numPlayers === 6) &&
             numTurnsAway === numPlayers - 2)
         ) {
+          yOffset.setValue(yOffsets.center);
+          xOffset.setValue(xOffsets.right);
+
           Animated.parallel([
             Animated.timing(yOffset, {
-              toValue: yOffsets.center,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scale, {
-              toValue: 0.2,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(xOffset, {
-              toValue: xOffsets.right,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
               toValue: 0,
               duration: 300,
               useNativeDriver: true,
             }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
           ]).start(() => {
-            scale.setValue(1);
-            yOffset.setValue(-2);
-            opacity.setValue(1);
-            xOffset.setValue(-2);
-            setAnimating(false);
+            setPreviousCard(gameState.currentCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
           });
         }
       }
@@ -226,70 +253,64 @@ const Deck = ({
   }, [gameState]);
 
   return (
-    <View style={styles.deckContainer}>
-      <View style={{ ...styles.cardBackLarge, elevation: 5 }}>
-        <TouchableWithoutFeedback
-          onPress={() => {
-            if (enabled && !animating) {
-              setAnimating(true);
-              onPress();
-              Animated.timing(yOffset, {
-                toValue: offsetMax,
-                duration: 300,
-                useNativeDriver: true,
-              }).start(() => {
-                yOffset.setValue(-2);
-                setAnimating(false);
-              });
-            }
-          }}
-          disabled={deck.length === 0}
-        >
-          <Animated.View
-            style={{
-              ...styles.cardBackLarge,
-              transform: [
-                {
-                  translateY: yOffset,
-                },
-                {
-                  translateX: xOffset,
-                },
-                {
-                  scaleX: scale,
-                },
-                {
-                  scaleY: scale,
-                },
-              ],
-              opacity: opacity,
-            }}
-          />
-        </TouchableWithoutFeedback>
+    <View>
+      <View style={styles.noCard}>
+        <Text style={styles.noCardText}>No Card Played</Text>
       </View>
-
-      {showCount && <Text style={styles.deckCount}>{deck.length}</Text>}
+      {previousCard !== null && (
+        <View style={styles.previousCard}>
+          <Card rank={previousCard.rank} suit={previousCard.suit} />
+        </View>
+      )}
+      {currentCard !== null && (
+        <Animated.View
+          style={{
+            ...styles.previousCard,
+            opacity: opacity,
+            transform: [
+              {
+                translateY: yOffset,
+              },
+              {
+                translateX: xOffset,
+              },
+              {
+                scaleX: scale,
+              },
+              {
+                scaleY: scale,
+              },
+            ],
+          }}
+        >
+          <Card rank={currentCard.rank} suit={currentCard.suit} />
+        </Animated.View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  deckContainer: {
+  noCard: {
+    backgroundColor: "white",
+    height: 128,
+    width: 92,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#BABABA",
     display: "flex",
+    justifyContent: "center",
     alignItems: "center",
   },
-  cardBackLarge: {
-    height: 128,
-    width: 80,
-    borderWidth: 2,
-    borderRadius: 4,
-    backgroundColor: "red",
-    borderColor: "white",
+  noCardText: {
+    color: "#BABABA",
+    textAlign: "center",
   },
-  deckCount: {
-    fontSize: 32,
-    marginTop: 8,
+  previousCard: {
+    position: "absolute",
+    marginLeft: -8,
+    marginTop: -8,
   },
 });
 
-export default Deck;
+export default PlayedCard;

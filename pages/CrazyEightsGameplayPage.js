@@ -24,6 +24,7 @@ import {
 } from "../utils/firebaseFunctions";
 import theme from "../styles/theme.style";
 import OpponentStateContainer from "../components/OpponentStateContainer";
+import PlayedCard from "../components/PlayedCard";
 
 const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -161,19 +162,11 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               }}
               showCount={false}
             />
-            <View>
-              <View style={styles.noCard}>
-                <Text style={styles.noCardText}>No Card Played</Text>
-              </View>
-              {gameState.currentCard !== null && (
-                <View style={styles.playedCard}>
-                  <Card
-                    rank={gameState.currentCard.rank}
-                    suit={gameState.currentCard.suit}
-                  />
-                </View>
-              )}
-            </View>
+            <PlayedCard
+              gameState={gameState}
+              name={name}
+              numPlayers={gameState.players.length}
+            />
           </View>
 
           <OpponentStateContainer
@@ -293,21 +286,6 @@ const styles = StyleSheet.create({
   userContainer: {
     display: "flex",
     justifyContent: "space-between",
-  },
-  noCard: {
-    backgroundColor: "white",
-    height: 128,
-    width: 92,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#BABABA",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  noCardText: {
-    color: "#BABABA",
-    textAlign: "center",
   },
   playedCard: {
     position: "absolute",
