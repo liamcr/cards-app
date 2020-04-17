@@ -3,7 +3,14 @@ import { View, Text, Button, StyleSheet } from "react-native";
 import { Picker } from "@react-native-community/picker";
 import theme from "../styles/theme.style";
 
-const UserPrompt = ({ gameState, name, toAsk, onValChange, onAsk }) => {
+const UserPrompt = ({
+  gameState,
+  name,
+  toAsk,
+  onValChange,
+  onAsk,
+  mustPickUp,
+}) => {
   if (
     gameState.players.findIndex((player) => player.name === name) !==
     gameState.turn
@@ -16,15 +23,27 @@ const UserPrompt = ({ gameState, name, toAsk, onValChange, onAsk }) => {
       </View>
     );
   } else if (gameState.game === "crazyEights") {
-    return (
-      <View style={styles.askForCardContainer}>
-        <View style={styles.askForCardSubcontainer}>
-          <Text style={styles.gameUpdateText}>
-            It's your turn! Choose a card to play, or draw one from the deck!
-          </Text>
+    if (mustPickUp) {
+      return (
+        <View style={styles.askForCardContainer}>
+          <View style={styles.askForCardSubcontainer}>
+            <Text style={styles.gameUpdateText}>
+              You have no cards to play! Take one from the deck above!
+            </Text>
+          </View>
         </View>
-      </View>
-    );
+      );
+    } else {
+      return (
+        <View style={styles.askForCardContainer}>
+          <View style={styles.askForCardSubcontainer}>
+            <Text style={styles.gameUpdateText}>
+              It's your turn! Choose a card to play, or draw one from the deck!
+            </Text>
+          </View>
+        </View>
+      );
+    }
   } else if (gameState.turnState === "fishing") {
     return (
       <View style={styles.askForCardContainer}>

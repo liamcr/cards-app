@@ -15,7 +15,7 @@ const UserHand = ({ player, renderCard, showPairs, navigation }) => {
             <TouchableOpacity
               onPress={() => {
                 navigation.navigate("PairedCards", {
-                  cards: player.pairedCards
+                  cards: player.pairedCards,
                 });
               }}
             >
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   userHandContainer: {
     height: 144,
     backgroundColor: "#F2F2F2",
-    marginTop: 8
+    marginTop: 8,
   },
   scoreContainer: {
     display: "flex",
@@ -51,11 +51,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingEnd: 16,
-    paddingStart: 16
+    paddingStart: 16,
+    marginTop: 8,
   },
   scoreText: {
-    fontSize: 20
-  }
+    fontSize: 20,
+  },
 });
 
 export default UserHand;

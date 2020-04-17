@@ -770,12 +770,15 @@ export async function startGame(gameId) {
       players[i].hand = shuffledPond.splice(0, numCardsToDeal);
     }
 
+    let startingPlayer = Math.floor(Math.random() * players.length);
+
     document
       .update({
         pond: shuffledPond,
         players: players,
         started: true,
-        gameUpdate: `It's ${players[0].name}'s turn`,
+        turn: startingPlayer,
+        gameUpdate: `It's ${players[startingPlayer].name}'s turn`,
       })
       .then(() => {
         console.log("started");

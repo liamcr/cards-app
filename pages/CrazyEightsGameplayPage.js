@@ -16,7 +16,6 @@ import UserPrompt from "../components/UserPrompt";
 import {
   playCardCE,
   takeFromPond,
-  finishTurnCE,
   endGame,
   takeCardFromHandCE,
   pickUpCE,
@@ -35,6 +34,8 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const [finishedGameModalVisible, setFinishedGameModalVisible] = useState(
     false
   );
+  const [mustPickUp, setMustPickUp] = useState(false);
+  const [hasPlayedCard, setHasPlayedCard] = useState(false);
 
   const rankingToEmoji = {
     "1st": "🥇",
@@ -68,10 +69,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             ) {
               endGame(gameId);
             } else if (newGameState.players[newGameState.turn].name === name) {
-              if (newGameState.players[newGameState.turn].hand.length === 0) {
-                setEnableDeck(false);
-                finishTurnCE(gameId, newGameState);
-              } else if (newGameState.toPickUp === 5) {
+              if (newGameState.toPickUp === 5) {
                 setPickUpModalVisible(true);
               } else if (
                 newGameState.toPickUp > 0 &&
@@ -91,6 +89,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                 !newGameState.choosingSuit
               ) {
                 setDrawCardModalVisible(true);
+                setMustPickUp(true);
+              } else if (newGameState.choosingSuit) {
+                setChooseSuitModalVisible(true);
               }
 
               if (
@@ -108,7 +109,8 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               newGameState.players.find((player) => player.name === name).hand
                 .length === 0 &&
               newGameState.playerRankings.length <=
-                newGameState.players.length - 2
+                newGameState.players.length - 2 &&
+              !newGameState.choosingSuit
             ) {
               setFinishedGameModalVisible(true);
             }
@@ -122,7 +124,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const onChooseSuit = (suit) => {
     setChooseSuitModalVisible(false);
     setEnableDeck(false);
-    playCardCE(gameId, name, "8", suit);
+    playCardCE(gameId, name, "8", suit).then(() => {
+      setHasPlayedCard(false);
+    });
   };
 
   const onPickUp = (toPickUp) => {
@@ -145,7 +149,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   };
 
   const onPressCard = (rank, suit) => {
-    if (gameState.players[gameState.turn].name === name) {
+    if (gameState.players[gameState.turn].name === name && !hasPlayedCard) {
       if (
         gameState.currentCard !== null &&
         gameState.toPickUp > 0 &&
@@ -153,7 +157,10 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
       ) {
         setEnableDeck(false);
         if (rank === "2") {
-          playCardCE(gameId, name, rank, suit);
+          setHasPlayedCard(true);
+          playCardCE(gameId, name, rank, suit).then(() => {
+            setHasPlayedCard(false);
+          });
         } else {
           ToastAndroid.show("You have to play your 2", ToastAndroid.SHORT);
         }
@@ -164,11 +171,14 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             gameState.currentCard.suit === suit) &&
           rank !== "8"
         ) {
+          setHasPlayedCard(true);
           setEnableDeck(false);
-          playCardCE(gameId, name, rank, suit);
+          playCardCE(gameId, name, rank, suit).then(() => {
+            setHasPlayedCard(false);
+          });
         } else if (rank === "8") {
+          setHasPlayedCard(true);
           setEnableDeck(false);
-          setChooseSuitModalVisible(true);
           takeCardFromHandCE(gameId, name, rank, suit);
         } else {
           ToastAndroid.show("You can't play that card!", ToastAndroid.SHORT);
@@ -196,7 +206,10 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               numPlayers={gameState.players.length}
               onPress={() => {
                 setEnableDeck(false);
-                takeFromPond(gameId, name);
+
+                takeFromPond(gameId, name).then(() => {
+                  setMustPickUp(false);
+                });
               }}
               showCount={false}
             />
@@ -216,7 +229,11 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
           />
         </View>
         <View style={styles.userContainer}>
-          <UserPrompt gameState={gameState} name={name} />
+          <UserPrompt
+            gameState={gameState}
+            name={name}
+            mustPickUp={mustPickUp}
+          />
           <UserHand
             player={gameState.players.find((player) => player.name === name)}
             renderCard={({ item }) => (
@@ -374,7 +391,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   modalSuit: {
-    fontSize: 16,
+    fontSize: 24,
   },
   modalClose: {
     fontSize: 16,
