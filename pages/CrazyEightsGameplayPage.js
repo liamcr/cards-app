@@ -13,7 +13,6 @@ import Deck from "../components/Deck";
 import UserHand from "../components/UserHand";
 import AnimatedCard from "../components/AnimatedCard";
 import UserPrompt from "../components/UserPrompt";
-import Card from "../components/Card";
 import {
   playCardCE,
   takeFromPond,
@@ -59,6 +58,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               endGame(gameId);
             } else if (newGameState.players[newGameState.turn].name === name) {
               if (newGameState.players[newGameState.turn].hand.length === 0) {
+                setEnableDeck(false);
                 finishTurnCE(gameId, newGameState);
               } else if (newGameState.toPickUp === 5) {
                 setPickUpModalVisible(true);
@@ -79,8 +79,15 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                 ).length === 0 &&
                 !newGameState.choosingSuit
               ) {
-                setEnableDeck(true);
                 setDrawCardModalVisible(true);
+              }
+
+              if (
+                newGameState.mostRecentMove.length > 0 &&
+                (newGameState.mostRecentMove[0] !== name ||
+                  newGameState.mostRecentMove[1] === "playCard")
+              ) {
+                setEnableDeck(true);
               }
             }
           }
@@ -92,6 +99,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
 
   const onChooseSuit = (suit) => {
     setChooseSuitModalVisible(false);
+    setEnableDeck(false);
     playCardCE(gameId, name, "8", suit);
   };
 
@@ -107,6 +115,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
         gameState.toPickUp > 0 &&
         gameState.currentCard.rank === "2"
       ) {
+        setEnableDeck(false);
         if (rank === "2") {
           playCardCE(gameId, name, rank, suit);
         } else {
@@ -119,8 +128,10 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             gameState.currentCard.suit === suit) &&
           rank !== "8"
         ) {
+          setEnableDeck(false);
           playCardCE(gameId, name, rank, suit);
         } else if (rank === "8") {
+          setEnableDeck(false);
           setChooseSuitModalVisible(true);
           takeCardFromHandCE(gameId, name, rank, suit);
         } else {
@@ -152,9 +163,15 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                 takeFromPond(gameId, name).then((cardDrawn) => {
                   if (
                     gameState.currentCard !== null &&
-                    gameState.currentCard.rank !== cardDrawn.rank &&
-                    gameState.currentCard.suit !== cardDrawn.suit &&
-                    cardDrawn.rank !== "8"
+                    ((gameState.currentCard.rank !== cardDrawn.rank &&
+                      gameState.currentCard.suit !== cardDrawn.suit &&
+                      cardDrawn.rank !== "8") ||
+                      gameState.players[gameState.turn].hand.filter(
+                        (card) =>
+                          gameState.currentCard.rank === card.rank ||
+                          gameState.currentCard.suit === card.suit ||
+                          card.rank === "8"
+                      ).length === 0)
                   ) {
                     finishTurnCE(gameId, gameState);
                   }

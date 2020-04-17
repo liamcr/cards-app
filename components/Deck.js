@@ -30,12 +30,14 @@ const Deck = ({
     top: 107 - 0.5 * screenHeight,
     center: 156 - 0.5 * screenHeight,
     bottom: 260 - 0.5 * screenHeight,
+    self: screenHeight,
   };
 
   const xOffsets = {
     center: (1 / 15) * screenWidth + 26,
     left: (-17 / 60) * screenWidth + 26,
     right: (31 / 60) * screenWidth + 26,
+    self: 0,
   };
 
   const turnsAway = (currentPlayerIndex, opponentIndex) => {
@@ -60,13 +62,28 @@ const Deck = ({
         (player) => player.name === name
       );
 
-      if (
-        opponentIndex !== playerIndex &&
-        playerIndex !== -1 &&
-        opponentIndex !== -1
-      ) {
+      if (playerIndex !== -1 && opponentIndex !== -1) {
         let numTurnsAway = turnsAway(playerIndex, opponentIndex);
 
+        if (playerIndex === opponentIndex) {
+          setAnimating(true);
+          Animated.parallel([
+            Animated.timing(yOffset, {
+              toValue: yOffsets.self,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: xOffsets.self,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            yOffset.setValue(-2);
+            xOffset.setValue(-2);
+            setAnimating(false);
+          });
+        }
         if (numPlayers === 2 * numTurnsAway) {
           setAnimating(true);
           Animated.parallel([
@@ -230,17 +247,8 @@ const Deck = ({
       <View style={{ ...styles.cardBackLarge, elevation: 5 }}>
         <TouchableWithoutFeedback
           onPress={() => {
-            if (enabled && !animating) {
-              setAnimating(true);
+            if (enabled) {
               onPress();
-              Animated.timing(yOffset, {
-                toValue: offsetMax,
-                duration: 300,
-                useNativeDriver: true,
-              }).start(() => {
-                yOffset.setValue(-2);
-                setAnimating(false);
-              });
             }
           }}
           disabled={deck.length === 0}
