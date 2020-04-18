@@ -12,6 +12,7 @@ const PlayedCard = ({ gameState, name, numPlayers }) => {
   const [currentCard, setCurrentCard] = useState(gameState.currentCard);
   const [previousCard, setPreviousCard] = useState(gameState.currentCard);
 
+  // Initialize some variables related to animating the cards
   const [yOffset] = useState(new Animated.Value(0));
   const [xOffset] = useState(new Animated.Value(0));
   const [scale] = useState(new Animated.Value(0.2));
@@ -19,6 +20,19 @@ const PlayedCard = ({ gameState, name, numPlayers }) => {
 
   const screenHeight = useWindowDimensions().height;
   const screenWidth = useWindowDimensions().width;
+
+  // Below are maps containing data related to the number of pixels a
+  // card has to be translated to be shown above an opponent's name on the screen.
+
+  // There are 2 maps - xOffsets and yOffsets
+
+  // For the yOffset map, there are entries for opponents whose names appear
+  // at the top, center, or bottom of the screen. There is also an entry for "self",
+  // which is there for the case that the current user is the one playing a card.
+
+  // For the xOffset map, there are entries for opponents whose names appear on the
+  // left, center, or right sides of the screen. There is also a "self" entry for
+  // the xOffset as well.
 
   const yOffsets = {
     top: 107 - 0.5 * screenHeight,
@@ -34,6 +48,9 @@ const PlayedCard = ({ gameState, name, numPlayers }) => {
     self: 0,
   };
 
+  // Determines how many turns a way an opponent is from the user.
+  // This is useful because an opponent's placement on the screen
+  // is determined by how many turns away from the user they are.
   const turnsAway = (currentPlayerIndex, opponentIndex) => {
     if (opponentIndex < currentPlayerIndex) {
       return numPlayers - currentPlayerIndex + opponentIndex;
@@ -43,6 +60,7 @@ const PlayedCard = ({ gameState, name, numPlayers }) => {
   };
 
   useEffect(() => {
+    // Run an animation whenever a user plays a card.
     if (
       gameState.mostRecentMove.length > 0 &&
       !gameState.choosingSuit &&
@@ -60,6 +78,11 @@ const PlayedCard = ({ gameState, name, numPlayers }) => {
       if (playerIndex !== -1 && opponentIndex !== -1) {
         let numTurnsAway = turnsAway(playerIndex, opponentIndex);
 
+        // There are 6 cases in the below if-statement. One representing each
+        // possible placement of an opponent on the screen, plus one representing the
+        // user's placement on the screen. Whichever condition returns true in this
+        // if-statement determines which user the card is animated from, making it look
+        // like that user has just played a card.
         if (playerIndex === opponentIndex) {
           yOffset.setValue(yOffsets.self);
           xOffset.setValue(xOffsets.self);

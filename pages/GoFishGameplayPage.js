@@ -179,7 +179,6 @@ const GoFishGameplayPage = ({ route, navigation }) => {
       <View style={styles.gameplayContainer}>
         <View style={styles.opponentContainer}>
           <Deck
-            deck={gameState.pond}
             enabled={enablePond}
             gameState={gameState}
             name={name}

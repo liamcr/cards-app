@@ -28,15 +28,34 @@ import InfoIcon from "../assets/infoIcon.png";
 
 const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
+
   const [gameState, setGameState] = useState(null);
+
+  // enableDeck is a boolean value that determines whether the user can
+  // take a card from the deck. This is a state variable rather than a
+  // firebase attribute so there is no delay when setting this value.
+  // In other words, it prevents the user from drawing more than one card
+  // at a time.
   const [enableDeck, setEnableDeck] = useState(false);
+
+  // The following state variables determine whether or not
+  // particular modals are visible to the user.
   const [drawCardModalVisible, setDrawCardModalVisible] = useState(false);
   const [chooseSuitModalVisible, setChooseSuitModalVisible] = useState(false);
   const [pickUpModalVisible, setPickUpModalVisible] = useState(false);
   const [finishedGameModalVisible, setFinishedGameModalVisible] = useState(
     false
   );
+
+  // mustPickUp is a boolean determining whether or not the user is required
+  // to pick up a card (i.e. they have no playable card in their hand). This
+  // is used to display the "pick up a card" prompt to the user.
   const [mustPickUp, setMustPickUp] = useState(false);
+
+  // hasPlayedCard is a boolean determining whether or not the user
+  // has played a card. This is used to prevent users from double-tapping
+  // a card which, without this state variable, would result in a card being
+  // played twice in a row.
   const [hasPlayedCard, setHasPlayedCard] = useState(false);
 
   const rankingToEmoji = {
@@ -62,12 +81,13 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               name: name,
             });
           } else {
+            // If there is only one player left in the game, and no one is in the
+            // middle of choosing a suit (in the case that an 8 is the last card
+            // played), end the game.
             if (
               newGameState.players.filter((player) => player.hand.length > 0)
                 .length === 1 &&
-              (newGameState.cardsPlayed.length === 0 ||
-                newGameState.cardsPlayed[newGameState.cardsPlayed.length - 1]
-                  .rank !== "8")
+              !newGameState.choosingSuit
             ) {
               endGame(gameId);
             } else if (newGameState.players[newGameState.turn].name === name) {
@@ -96,6 +116,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                 setChooseSuitModalVisible(true);
               }
 
+              // Enable deck at the beginning of the user's turn
               if (
                 newGameState.mostRecentMove.length === 0 ||
                 (newGameState.mostRecentMove[0] !== name ||
@@ -104,6 +125,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
                 setEnableDeck(true);
               }
             }
+
+            // If the user just played their last card and there is more than 1 player
+            // left, show a modal acknowledging that they are finished.
             if (
               newGameState.mostRecentMove.length > 0 &&
               newGameState.mostRecentMove[0] === name &&
@@ -123,6 +147,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
     return () => unsubscribe();
   }, []);
 
+  // Runs when a user chooses a suit to play after playing an 8
   const onChooseSuit = (suit) => {
     setChooseSuitModalVisible(false);
     setEnableDeck(false);
@@ -131,11 +156,15 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
     });
   };
 
+  // Runs when a user is forced to pick up 2 or more cards
   const onPickUp = (toPickUp) => {
     setPickUpModalVisible(false);
     pickUpCE(gameId, name, toPickUp);
   };
 
+  // Converts the user's index in the rankings array to a readable string.
+  // For example, if the user is at index 1 of the rankings array, the function
+  // returns '2nd'
   const getPlacementText = () => {
     const ranking = gameState.playerRankings.findIndex(
       (player) => player === name
@@ -150,8 +179,11 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
     }
   };
 
+  // Runs when the user taps a card with the intent to play it
   const onPressCard = (rank, suit) => {
     if (gameState.players[gameState.turn].name === name && !hasPlayedCard) {
+      // If the user has to pick up 2, 4, or 6 cards, they must play a two
+      // if they have one in their hand.
       if (
         gameState.currentCard !== null &&
         gameState.toPickUp > 0 &&
@@ -201,7 +233,6 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
         <View style={styles.opponentContainer}>
           <View style={styles.cardsContainer}>
             <Deck
-              deck={gameState.pond}
               enabled={enableDeck}
               gameState={gameState}
               name={name}
@@ -334,7 +365,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             <View style={styles.modalView}>
               <Text style={styles.modalTitle}>{`Congratulations! ${
                 rankingToEmoji[getPlacementText()]
-              }🎉`}</Text>
+              }`}</Text>
               <Text
                 style={styles.modalBody}
               >{`You finished ${getPlacementText()}! Sit tight and wait for the others to finish up!`}</Text>

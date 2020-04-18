@@ -8,21 +8,29 @@ import {
   useWindowDimensions,
 } from "react-native";
 
-const Deck = ({
-  onPress,
-  enabled,
-  deck,
-  showCount,
-  gameState,
-  name,
-  numPlayers,
-}) => {
+const Deck = ({ onPress, enabled, showCount, gameState, name, numPlayers }) => {
+  // Initialize some variables related to animating the cards
   const [yOffset] = useState(new Animated.Value(-2));
   const [xOffset] = useState(new Animated.Value(-2));
   const [opacity] = useState(new Animated.Value(1));
   const [scale] = useState(new Animated.Value(1));
   const screenHeight = useWindowDimensions().height;
   const screenWidth = useWindowDimensions().width;
+
+  // Below are maps containing data related to the number of pixels a
+  // card has to be translated to be shown above an opponent's name on the screen.
+
+  // There are 4 maps - yOffsets for both crazy eights and go fish, as well as the
+  // xOffsets for both games. Each map has 4 values.
+
+  // For the yOffset maps, there are entries for opponents whose names appear
+  // at the top, center, or bottom of the screen. There are also entries for "self",
+  // which is there for the case that the current user is the one drawing a card
+  // from the deck.
+
+  // For the xOffset maps, there are entries for opponents whose names appear on the
+  // left, center, or right sides of the screen. There is also a "self" entry for
+  // the xOffsets as well.
 
   const yOffsetsCE = {
     top: 107 - 0.5 * screenHeight,
@@ -52,6 +60,9 @@ const Deck = ({
     self: 0,
   };
 
+  // Determines how many turns a way an opponent is from the user.
+  // This is useful because an opponent's placement on the screen
+  // is determined by how many turns away from the user they are.
   const turnsAway = (currentPlayerIndex, opponentIndex) => {
     if (opponentIndex < currentPlayerIndex) {
       return numPlayers - currentPlayerIndex + opponentIndex;
@@ -61,6 +72,7 @@ const Deck = ({
   };
 
   useEffect(() => {
+    // Run an animation whenever a user picks up a card.
     if (
       gameState.mostRecentMove.length > 0 &&
       !gameState.choosingSuit &&
@@ -76,6 +88,8 @@ const Deck = ({
       let xOffsets;
       let yOffsets;
 
+      // Set the x and y offsets depending on which game is being
+      // played.
       if (gameState.game === "crazyEights") {
         xOffsets = xOffsetsCE;
         yOffsets = yOffsetsCE;
@@ -87,6 +101,11 @@ const Deck = ({
       if (playerIndex !== -1 && opponentIndex !== -1) {
         let numTurnsAway = turnsAway(playerIndex, opponentIndex);
 
+        // There are 6 cases in the below if-statement. One representing each
+        // possible placement of an opponent on the screen, plus one representing the
+        // user's placement on the screen. Whichever condition returns true in this
+        // if-statement determines which user the card is animated to, making it look
+        // like that user has just picked up a card.
         if (playerIndex === opponentIndex) {
           Animated.parallel([
             Animated.timing(yOffset, {
@@ -265,7 +284,7 @@ const Deck = ({
               onPress();
             }
           }}
-          disabled={deck.length === 0}
+          disabled={gameState.pond.length === 0}
         >
           <Animated.View
             style={{
@@ -290,7 +309,9 @@ const Deck = ({
         </TouchableWithoutFeedback>
       </View>
 
-      {showCount && <Text style={styles.deckCount}>{deck.length}</Text>}
+      {showCount && (
+        <Text style={styles.deckCount}>{gameState.pond.length}</Text>
+      )}
     </View>
   );
 };

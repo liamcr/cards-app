@@ -3,7 +3,11 @@ import firestore from "@react-native-firebase/firestore";
 import pondTemplate from "../utils/pondTemplate.json";
 import AsyncStorage from "@react-native-community/async-storage";
 import MaxPlayers from "./gameMaxPlayers.json";
-import { shuffle, getNextPlayerCE } from "./helperFunctions";
+import {
+  shuffle,
+  getNextPlayerCE,
+  getNextPlayerGoFish,
+} from "./helperFunctions";
 
 /* 
   Saves game locally, so that the app can remember that the user
@@ -36,6 +40,10 @@ export async function setLocalData(gameId, name) {
   });
 }
 
+/*
+  Retrieves the games saved locally, and returns them in proper
+  JSON format.
+*/
 export async function getLocalData() {
   let localData;
 
@@ -132,6 +140,10 @@ export async function cancelGame(gameId) {
     .delete();
 }
 
+/* 
+  Reverts a completed game back to its original state so that the game can 
+  be played again 
+*/
 export async function resetGame(gameId) {
   const document = firestore()
     .collection("liveGames")
@@ -343,6 +355,12 @@ export async function takeFromPond(gameId, name) {
   return cardDrawn;
 }
 
+/*
+  Logic for picking up multiple cards from the deck in crazy eights.
+  If the deck becomes empty after the user picks up their cards,
+  the cards that have been played previously are shuffled
+  and put back into the deck.
+*/
 export async function pickUpCE(gameId, name, numToPickUp) {
   const document = firestore()
     .collection("liveGames")
@@ -370,6 +388,10 @@ export async function pickUpCE(gameId, name, numToPickUp) {
   });
 }
 
+/*
+  Sets the turn state of a go fish game. Valid values are
+  "fishingToStart", "fishing", and "choosingCard"
+*/
 export async function setTurnState(gameId, turnState) {
   await firestore()
     .collection("liveGames")
@@ -379,8 +401,12 @@ export async function setTurnState(gameId, turnState) {
     });
 }
 
+/*
+  Logic for finishing a turn in go fish. Sets the turn to the next player
+  and sets the turn state accordingly
+*/
 export async function finishTurn(gameId, gameState) {
-  const nextTurn = (gameState.turn + 1) % gameState.players.length;
+  const nextTurn = getNextPlayerGoFish(gameState);
 
   let nextTurnStartingState =
     gameState.players[nextTurn].hand.length === 0
@@ -398,6 +424,10 @@ export async function finishTurn(gameId, gameState) {
     });
 }
 
+/*
+  Logic for finishing a turn in crazy eights. Finds the next available player
+  and sets it to be their turn.
+*/
 export async function finishTurnCE(gameId, gameState) {
   const nextTurn = getNextPlayerCE(gameState, false);
 
@@ -411,6 +441,10 @@ export async function finishTurnCE(gameId, gameState) {
     });
 }
 
+/*
+  Logic for playing a card in crazy eights. Logic for special cards (2, J, QSpades)
+  is included in this function.
+*/
 export async function playCardCE(gameId, playerName, rank, suit) {
   const document = firestore()
     .collection("liveGames")
@@ -475,6 +509,10 @@ export async function playCardCE(gameId, playerName, rank, suit) {
   });
 }
 
+/*
+  Logic for removing a card from a user's hand without actually playing it.
+  Only used for choosing a suit after playing an 8.
+*/
 export async function takeCardFromHandCE(gameId, name, rank, suit) {
   const document = firestore()
     .collection("liveGames")
@@ -501,6 +539,11 @@ export async function takeCardFromHandCE(gameId, name, rank, suit) {
   });
 }
 
+/*
+  Logic for pairing up a hand in go fish. Removes any duplicate-ranked
+  cards and adds them to the player's pairedCards array. Returns the number
+  of pairs found.
+*/
 export async function pairUpHand(gameId, playerName) {
   const document = firestore()
     .collection("liveGames")
@@ -750,6 +793,9 @@ export async function joinGame(name, gameId) {
     });
 }
 
+/*
+  Initializes a game in firebase to a state valid to start a game in.
+*/
 export async function startGame(gameId) {
   const document = firestore()
     .collection("liveGames")
@@ -764,11 +810,26 @@ export async function startGame(gameId) {
     let players = [...data.players];
 
     let numCardsToDeal;
+    let startingCard;
 
     if (data.game === "goFish") {
       numCardsToDeal = players.length <= 3 ? 7 : 5;
     } else if (data.game === "crazyEights") {
+      startingCard = shuffledPond.splice(
+        shuffledPond.findIndex((card) => card.rank !== "8"),
+        1
+      )[0];
       numCardsToDeal = 8;
+    }
+
+    let toPickUpInit = 0;
+
+    if (data.game === "crazyEights") {
+      if (startingCard.rank === "2") {
+        toPickUpInit = 2;
+      } else if (startingCard.rank === "Q" && startingCard.suit === "spades") {
+        toPickUpInit = 5;
+      }
     }
 
     for (let i = 0; i < players.length; i++) {
@@ -777,20 +838,39 @@ export async function startGame(gameId) {
 
     let startingPlayer = Math.floor(Math.random() * players.length);
 
-    document
-      .update({
-        pond: shuffledPond,
-        players: players,
-        started: true,
-        turn: startingPlayer,
-        gameUpdate: `It's ${players[startingPlayer].name}'s turn`,
-      })
-      .then(() => {
-        console.log("started");
-      });
+    if (data.game === "goFish") {
+      document
+        .update({
+          pond: shuffledPond,
+          players: players,
+          started: true,
+          turn: startingPlayer,
+          gameUpdate: `It's ${players[startingPlayer].name}'s turn`,
+        })
+        .then(() => {
+          console.log("started");
+        });
+    } else if (data.game === "crazyEights") {
+      document
+        .update({
+          pond: shuffledPond,
+          players: players,
+          started: true,
+          turn: startingPlayer,
+          gameUpdate: `It's ${players[startingPlayer].name}'s turn`,
+          currentCard: startingCard,
+          toPickUp: toPickUpInit,
+        })
+        .then(() => {
+          console.log("started");
+        });
+    }
   });
 }
 
+/*
+  Sets the game in firebase to finished
+*/
 export async function endGame(gameId) {
   await firestore()
     .collection("liveGames")

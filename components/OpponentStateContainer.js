@@ -7,6 +7,9 @@ const OpponentStateContainer = ({ userIndex, playerArr, gameState }) => {
   let opponentsAdded = 0;
   let i = (userIndex + 1) % playerArr.length;
 
+  // This while loop iterates through the opponents, and assigns them
+  // a space on the screen to be rendered. This allows the opponents to
+  // be displayed on the screen in the order that they play in.
   while (i !== userIndex) {
     if (numOpponents === 1) {
       opponentStates[i.toString()] = "opponentContainerC";
