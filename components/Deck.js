@@ -21,22 +21,34 @@ const Deck = ({
   const [xOffset] = useState(new Animated.Value(-2));
   const [opacity] = useState(new Animated.Value(1));
   const [scale] = useState(new Animated.Value(1));
-  const [animating, setAnimating] = useState(false);
   const screenHeight = useWindowDimensions().height;
   const screenWidth = useWindowDimensions().width;
-  const offsetMax = screenHeight * 0.8;
 
-  const yOffsets = {
+  const yOffsetsCE = {
     top: 107 - 0.5 * screenHeight,
     center: 156 - 0.5 * screenHeight,
     bottom: 260 - 0.5 * screenHeight,
     self: screenHeight,
   };
 
-  const xOffsets = {
+  const yOffsetsGoFish = {
+    top: 147 - 0.5 * screenHeight,
+    center: 196 - 0.5 * screenHeight,
+    bottom: 300 - 0.5 * screenHeight,
+    self: screenHeight,
+  };
+
+  const xOffsetsCE = {
     center: (1 / 15) * screenWidth + 26,
     left: (-17 / 60) * screenWidth + 26,
     right: (31 / 60) * screenWidth + 26,
+    self: 0,
+  };
+
+  const xOffsetsGoFish = {
+    center: (-1 / 10) * screenWidth + 25.2,
+    left: (-9 / 20) * screenWidth + 25.2,
+    right: (7 / 20) * screenWidth + 25.2,
     self: 0,
   };
 
@@ -50,7 +62,6 @@ const Deck = ({
 
   useEffect(() => {
     if (
-      gameState.game === "crazyEights" &&
       gameState.mostRecentMove.length > 0 &&
       !gameState.choosingSuit &&
       gameState.mostRecentMove[1] === "pickUp"
@@ -62,11 +73,21 @@ const Deck = ({
         (player) => player.name === name
       );
 
+      let xOffsets;
+      let yOffsets;
+
+      if (gameState.game === "crazyEights") {
+        xOffsets = xOffsetsCE;
+        yOffsets = yOffsetsCE;
+      } else if (gameState.game === "goFish") {
+        xOffsets = xOffsetsGoFish;
+        yOffsets = yOffsetsGoFish;
+      }
+
       if (playerIndex !== -1 && opponentIndex !== -1) {
         let numTurnsAway = turnsAway(playerIndex, opponentIndex);
 
         if (playerIndex === opponentIndex) {
-          setAnimating(true);
           Animated.parallel([
             Animated.timing(yOffset, {
               toValue: yOffsets.self,
@@ -81,11 +102,9 @@ const Deck = ({
           ]).start(() => {
             yOffset.setValue(-2);
             xOffset.setValue(-2);
-            setAnimating(false);
           });
         }
         if (numPlayers === 2 * numTurnsAway) {
-          setAnimating(true);
           Animated.parallel([
             Animated.timing(yOffset, {
               toValue: yOffsets.top,
@@ -112,7 +131,6 @@ const Deck = ({
             scale.setValue(1);
             xOffset.setValue(-2);
             opacity.setValue(1);
-            setAnimating(false);
           });
         } else if (numTurnsAway === 1 && numPlayers >= 4) {
           Animated.parallel([
@@ -141,7 +159,6 @@ const Deck = ({
             yOffset.setValue(-2);
             opacity.setValue(1);
             xOffset.setValue(-2);
-            setAnimating(false);
           });
         } else if (numTurnsAway === numPlayers - 1 && numPlayers >= 4) {
           Animated.parallel([
@@ -170,7 +187,6 @@ const Deck = ({
             yOffset.setValue(-2);
             opacity.setValue(1);
             xOffset.setValue(-2);
-            setAnimating(false);
           });
         } else if (
           (numPlayers === 3 && numTurnsAway === 1) ||
@@ -202,7 +218,6 @@ const Deck = ({
             yOffset.setValue(-2);
             opacity.setValue(1);
             xOffset.setValue(-2);
-            setAnimating(false);
           });
         } else if (
           (numPlayers === 3 && numTurnsAway === 2) ||
@@ -235,7 +250,6 @@ const Deck = ({
             yOffset.setValue(-2);
             opacity.setValue(1);
             xOffset.setValue(-2);
-            setAnimating(false);
           });
         }
       }

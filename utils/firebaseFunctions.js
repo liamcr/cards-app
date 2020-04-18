@@ -245,6 +245,7 @@ export async function takeCard(gameId, playerOneName, playerTwoName, rank) {
         await document.update({
           players: updatedPlayers,
           gameUpdate: `${playerOneName} took a ${rank} from ${playerTwoName}!`,
+          mostRecentMove: [],
         });
 
         opponentHasCard = true;
@@ -252,6 +253,7 @@ export async function takeCard(gameId, playerOneName, playerTwoName, rank) {
         await document.update({
           gameUpdate: `${playerOneName} asked ${playerTwoName} for a ${rank}`,
           turnState: "fishing",
+          mostRecentMove: [],
         });
 
         opponentHasCard = false;
@@ -324,6 +326,7 @@ export async function takeFromPond(gameId, name) {
           await document.update({
             players: updatedGame.players,
             pond: updatedGame.pond,
+            mostRecentMove: [name, "pickUp"],
           });
         } else if (updatedGame.game === "crazyEights") {
           await document.update({
@@ -391,6 +394,7 @@ export async function finishTurn(gameId, gameState) {
       turn: nextTurn,
       gameUpdate: `It's ${gameState.players[nextTurn].name}'s turn`,
       turnState: nextTurnStartingState,
+      mostRecentMove: [],
     });
 }
 
@@ -537,7 +541,7 @@ export async function pairUpHand(gameId, playerName) {
       pairsFound = numPairs;
 
       if (numPairs > 0) {
-        await document.update({ players: data.players });
+        await document.update({ players: data.players, mostRecentMove: [] });
       }
     }
   });
@@ -616,6 +620,7 @@ export async function createGame(creatorName, gameType) {
       pond: pondTemplate,
       gameUpdate: "Game Starting...",
       turnState: "choosingCard",
+      mostRecentMove: [],
     };
   } else if (gameType === "crazyEights") {
     gameObject = {
