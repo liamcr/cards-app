@@ -6,6 +6,7 @@ import {
   Text,
   Modal,
   ToastAndroid,
+  Image,
 } from "react-native";
 import LoadingOverlay from "../components/LoadingOverlay";
 import firestore from "@react-native-firebase/firestore";
@@ -23,6 +24,7 @@ import {
 import theme from "../styles/theme.style";
 import OpponentStateContainer from "../components/OpponentStateContainer";
 import PlayedCard from "../components/PlayedCard";
+import InfoIcon from "../assets/infoIcon.png";
 
 const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -247,6 +249,14 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
             showPairs={false}
           />
         </View>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate("CrazyEightsRules");
+          }}
+          style={{ position: "absolute", margin: 5, right: 0 }}
+        >
+          <Image source={InfoIcon} style={{ height: 32, width: 32 }} />
+        </TouchableOpacity>
         <Modal
           visible={drawCardModalVisible}
           animationType="slide"
