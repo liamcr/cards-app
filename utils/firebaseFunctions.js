@@ -398,6 +398,7 @@ export async function setTurnState(gameId, turnState) {
     .doc(gameId)
     .update({
       turnState: turnState,
+      mostRecentMove: [],
     });
 }
 
