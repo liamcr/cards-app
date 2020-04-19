@@ -1,23 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
-  FlatList
+  FlatList,
 } from "react-native";
 import theme from "../styles/theme.style";
 import ContinueGameRow from "../components/ContinueGameRow";
-import { getLocalData } from "../utils/firebaseFunctions";
+import { getLocalData, cleanLocalStorage } from "../utils/firebaseFunctions";
 
 const ContinueGame = ({ navigation }) => {
   const [localGames, setLocalGames] = useState(null);
 
-  if (localGames === null) {
-    getLocalData().then(data => {
-      setLocalGames(data);
+  useEffect(() => {
+    cleanLocalStorage().then(() => {
+      getLocalData().then((data) => {
+        setLocalGames(data);
+      });
     });
-  }
+  }, []);
 
   return (
     <View style={styles.pageContainer}>
@@ -50,22 +52,22 @@ const styles = StyleSheet.create({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-around",
-    height: "100%"
+    height: "100%",
   },
   title: {
-    fontSize: 32
+    fontSize: 32,
   },
   noGamesText: {
     fontSize: 20,
     color: "#888888",
-    textAlign: "center"
+    textAlign: "center",
   },
   gameListContainer: {
     height: "50%",
     width: "70%",
     display: "flex",
-    justifyContent: "center"
-  }
+    justifyContent: "center",
+  },
 });
 
 export default ContinueGame;

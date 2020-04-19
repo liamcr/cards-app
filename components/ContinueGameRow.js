@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import ProfileIcon from "../assets/profileIcon.png";
-import { getGame } from "../utils/firebaseFunctions";
+import { getGame, removeGameLocally } from "../utils/firebaseFunctions";
 import GoIcon from "../assets/go.png";
 
 const ContinueGameRow = ({ gameId, playerName, navigation }) => {
@@ -57,11 +57,16 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
     }
   };
 
-  if (gameData === null) {
+  useEffect(() => {
     getGame(gameId).then((data) => {
+      if (gameData === null) {
+        removeGameLocally(gameId).catch((err) => {
+          console.log(err.message);
+        });
+      }
       setGameData(data);
     });
-  }
+  }, []);
 
   return (
     <TouchableOpacity style={styles.rowContainer} onPress={goToGame}>
