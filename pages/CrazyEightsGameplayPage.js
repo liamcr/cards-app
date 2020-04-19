@@ -7,6 +7,7 @@ import {
   Modal,
   ToastAndroid,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import LoadingOverlay from "../components/LoadingOverlay";
 import firestore from "@react-native-firebase/firestore";
@@ -57,6 +58,11 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   // a card which, without this state variable, would result in a card being
   // played twice in a row.
   const [hasPlayedCard, setHasPlayedCard] = useState(false);
+
+  // waitingForFirebase is a boolean value that is true if there
+  // is an asynchronous firebase function currently running. This
+  // is used to show the user some loading feedback.
+  const [waitingForFirebase, setWaitingForFirebase] = useState(false);
 
   const rankingToEmoji = {
     "1st": "🥇",
@@ -151,7 +157,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   const onChooseSuit = (suit) => {
     setChooseSuitModalVisible(false);
     setEnableDeck(false);
+    setWaitingForFirebase(true);
     playCardCE(gameId, name, "8", suit).then(() => {
+      setWaitingForFirebase(false);
       setHasPlayedCard(false);
     });
   };
@@ -159,7 +167,10 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
   // Runs when a user is forced to pick up 2 or more cards
   const onPickUp = (toPickUp) => {
     setPickUpModalVisible(false);
-    pickUpCE(gameId, name, toPickUp);
+    setWaitingForFirebase(true);
+    pickUpCE(gameId, name, toPickUp).then(() => {
+      setWaitingForFirebase(false);
+    });
   };
 
   // Converts the user's index in the rankings array to a readable string.
@@ -192,8 +203,10 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
         setEnableDeck(false);
         if (rank === "2") {
           setHasPlayedCard(true);
+          setWaitingForFirebase(true);
           playCardCE(gameId, name, rank, suit).then(() => {
             setHasPlayedCard(false);
+            setWaitingForFirebase(false);
           });
         } else {
           ToastAndroid.show("You have to play your 2", ToastAndroid.SHORT);
@@ -207,13 +220,18 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
         ) {
           setHasPlayedCard(true);
           setEnableDeck(false);
+          setWaitingForFirebase(true);
           playCardCE(gameId, name, rank, suit).then(() => {
             setHasPlayedCard(false);
+            setWaitingForFirebase(false);
           });
         } else if (rank === "8") {
           setHasPlayedCard(true);
           setEnableDeck(false);
-          takeCardFromHandCE(gameId, name, rank, suit);
+          setWaitingForFirebase(true);
+          takeCardFromHandCE(gameId, name, rank, suit).then(() => {
+            setWaitingForFirebase(false);
+          });
         } else {
           ToastAndroid.show("You can't play that card!", ToastAndroid.SHORT);
         }
@@ -239,8 +257,9 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               numPlayers={gameState.players.length}
               onPress={() => {
                 setEnableDeck(false);
-
+                setWaitingForFirebase(true);
                 takeFromPond(gameId, name).then(() => {
+                  setWaitingForFirebase(false);
                   setMustPickUp(false);
                 });
               }}
@@ -288,6 +307,11 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
         >
           <Image source={InfoIcon} style={{ height: 32, width: 32 }} />
         </TouchableOpacity>
+        <ActivityIndicator
+          style={{ position: "absolute", margin: 5 }}
+          color={theme.PRIMARY_COLOUR}
+          animating={waitingForFirebase}
+        />
         <Modal
           visible={drawCardModalVisible}
           animationType="slide"
