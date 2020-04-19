@@ -721,77 +721,77 @@ export async function joinGame(name, gameId) {
     .collection("liveGames")
     .doc(gameId);
 
-  await document
-    .get()
-    .then(async (doc) => {
-      let userInGame = false;
-      if (doc.exists) {
-        let data = doc.data();
+  let errorMessage = null;
 
-        if (
-          !data.started &&
-          data.players.length < MaxPlayers[data.game] &&
-          data.players.filter((player) => player.name === name).length === 0
-        ) {
-          await isInGame(gameId).then((inGame) => {
-            if (!inGame) {
-              let currentPlayers = data.players;
+  await document.get().then(async (doc) => {
+    let userInGame = false;
+    if (doc.exists) {
+      let data = doc.data();
 
-              if (data.game === "goFish") {
-                currentPlayers.push({
-                  name: name,
-                  numPairs: 0,
-                  hand: [],
-                  pairedCards: [],
-                });
-              } else if (data.game === "crazyEights") {
-                currentPlayers.push({
-                  name: name,
-                  hand: 0,
-                });
-              }
+      if (
+        !data.started &&
+        data.game in MaxPlayers &&
+        data.players.length < MaxPlayers[data.game] &&
+        data.players.filter((player) => player.name === name).length === 0
+      ) {
+        await isInGame(gameId).then(async (inGame) => {
+          if (!inGame) {
+            let currentPlayers = data.players;
 
-              document
-                .update({ players: currentPlayers })
-                .then(() => {
-                  console.log("Player added!");
-                  setLocalData(gameId, name).catch((error) => {
-                    throw new Error(error);
-                  });
-                })
-                .catch((error) => {
-                  throw new Error(error);
-                })
-
-                .catch((error) => {
-                  console.error("Unforseen error", error);
-                });
-            } else {
-              userInGame = true;
+            if (data.game === "goFish") {
+              currentPlayers.push({
+                name: name,
+                numPairs: 0,
+                hand: [],
+                pairedCards: [],
+              });
+            } else if (data.game === "crazyEights") {
+              currentPlayers.push({
+                name: name,
+                hand: 0,
+              });
             }
-          });
 
-          if (userInGame) {
-            throw new Error("You're already in this game!");
+            await document
+              .update({ players: currentPlayers })
+              .then(() => {
+                console.log("Player added!");
+                setLocalData(gameId, name).catch((error) => {
+                  errorMessage = error.message;
+                });
+              })
+              .catch((error) => {
+                errorMessage = error.message;
+              });
+          } else {
+            userInGame = true;
           }
-        } else {
-          if (data.started) {
-            throw new Error("Game in progress");
-          } else if (data.players.length >= MaxPlayers[data.game]) {
-            throw new Error("This game is full");
-          } else if (
-            data.players.filter((player) => player.name === name).length >= 0
-          ) {
-            throw new Error(`There is already someone named ${name}`);
-          }
+        });
+
+        if (userInGame) {
+          errorMessage = "You're already in this game!";
         }
       } else {
-        throw new Error("Game does not exist");
+        if (data.started) {
+          errorMessage = "Game in progress";
+        } else if (!(data.game in MaxPlayers)) {
+          errorMessage = "Unrecognized Game";
+        } else if (data.players.length >= MaxPlayers[data.game]) {
+          errorMessage = "This game is full";
+        } else if (
+          data.players.filter((player) => player.name === name).length >= 0
+        ) {
+          errorMessage = `There is already someone named ${name}`;
+        }
       }
-    })
-    .catch((error) => {
-      throw error;
-    });
+    } else {
+      errorMessage = "Game does not exist";
+    }
+  });
+
+  if (errorMessage !== null) {
+    throw new Error(errorMessage);
+  }
 }
 
 /*

@@ -13,7 +13,7 @@ const CrazyEightsRules = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       changeSuit();
-    }, 2000);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, []);
