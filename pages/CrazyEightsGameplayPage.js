@@ -365,13 +365,19 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
               <Text style={styles.modalTitle}>Choose a suit:</Text>
               <View style={styles.suitsContainer}>
                 <TouchableOpacity onPress={() => onChooseSuit("diamonds")}>
-                  <Text style={styles.modalSuit}>♦</Text>
+                  <Text style={{ ...styles.modalSuit, marginRight: 16 }}>
+                    ♦
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => onChooseSuit("hearts")}>
-                  <Text style={styles.modalSuit}>♥</Text>
+                  <Text style={{ ...styles.modalSuit, marginRight: 16 }}>
+                    ♥
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => onChooseSuit("spades")}>
-                  <Text style={styles.modalSuit}>♠</Text>
+                  <Text style={{ ...styles.modalSuit, marginRight: 16 }}>
+                    ♠
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => onChooseSuit("clubs")}>
                   <Text style={styles.modalSuit}>♣</Text>
@@ -456,10 +462,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   modalSuit: {
-    fontSize: 24,
+    fontSize: 36,
   },
   modalClose: {
-    fontSize: 16,
+    fontSize: 24,
     marginTop: 8,
     color: theme.PRIMARY_COLOUR,
     textAlign: "center",

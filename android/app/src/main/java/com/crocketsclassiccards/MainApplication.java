@@ -1,4 +1,4 @@
-package com.cards;
+package com.crocketsclassiccards;
 
 import android.app.Application;
 import android.content.Context;

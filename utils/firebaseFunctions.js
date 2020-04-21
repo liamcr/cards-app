@@ -369,7 +369,7 @@ export async function pickUpCE(gameId, name, numToPickUp) {
   await document.get().then(async (doc) => {
     let data = doc.data();
 
-    if (data.pond.length < numToPickUp) {
+    if (numToPickUp + 1 > data.pond.length) {
       data.pond = [...shuffle([...data.cardsPlayed]), ...data.pond];
       data.cardsPlayed = [];
     }

@@ -1,4 +1,4 @@
-package com.cards;
+package com.crocketsclassiccards;
 
 import com.facebook.react.ReactActivity;
 
