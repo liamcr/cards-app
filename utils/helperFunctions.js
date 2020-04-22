@@ -65,3 +65,29 @@ export function getNextPlayerGoFish(gameState) {
 
   return playerIndex;
 }
+
+/**
+ * Comparison function used for sorting cards in president
+ *
+ * @param {object} cardOne The first card in the comparison
+ * @param {object} cardTwo The second card in the comparison
+ */
+export function cardComparison(cardOne, cardTwo) {
+  const cardVals = {
+    "3": 1,
+    "4": 2,
+    "5": 3,
+    "6": 4,
+    "7": 5,
+    "8": 6,
+    "9": 7,
+    "10": 8,
+    J: 9,
+    Q: 10,
+    K: 11,
+    A: 12,
+    "2": 13,
+  };
+
+  return cardVals[cardOne.rank] - cardVals[cardTwo.rank];
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import PresidentHand from "../components/PresidentHand";
 import firestore from "@react-native-firebase/firestore";
 import LoadingOverlay from "../components/LoadingOverlay";
 
@@ -29,7 +30,17 @@ const PresidentGameplayPage = ({ route, navigation }) => {
       </View>
     );
   } else {
-    return <Text>President!</Text>;
+    return (
+      <View style={styles.gameplayContainer}>
+        <View style={styles.opponentContainer} />
+        <View style={styles.userContainer}>
+          <PresidentHand
+            gameId={gameId}
+            playerObj={gameState.players.find((player) => player.name === name)}
+          />
+        </View>
+      </View>
+    );
   }
 };
 

@@ -7,6 +7,7 @@ import {
   shuffle,
   getNextPlayerCE,
   getNextPlayerGoFish,
+  cardComparison,
 } from "./helperFunctions";
 
 /**********************************
@@ -634,6 +635,10 @@ export async function startGame(gameId) {
             (card) => card.rank === "3" && card.suit === "diamonds"
           ).length > 0
       );
+
+      for (let i = 0; i < players.length; i++) {
+        players[i].hand = players[i].hand.sort(cardComparison);
+      }
     }
 
     if (data.game === "goFish") {
