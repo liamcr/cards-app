@@ -59,7 +59,7 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
 
   useEffect(() => {
     getGame(gameId).then((data) => {
-      if (gameData === null) {
+      if (data === null) {
         removeGameLocally(gameId).catch((err) => {
           console.log(err.message);
         });
