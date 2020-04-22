@@ -122,9 +122,14 @@ const WaitingRoom = ({ route, navigation }) => {
 
           if (
             updatedData.started &&
-            newDocPlayers.filter(
-              (player) => player.hand.length === startingHandLength
-            ).length === newDocPlayers.length
+            (updatedData.game !== "president"
+              ? newDocPlayers.filter(
+                  (player) => player.hand.length === startingHandLength
+                ).length === newDocPlayers.length
+              : newDocPlayers.reduce(
+                  (total, player) => total + player.hand.length,
+                  0
+                ) === 52)
           ) {
             navigation.replace(gameplayScreenMapping[updatedData.game], {
               gameId: gameId,

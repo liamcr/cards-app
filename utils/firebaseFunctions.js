@@ -435,6 +435,7 @@ export async function createGame(creatorName, gameType) {
         {
           name: creatorName,
           hand: [],
+          rank: "neutral",
         },
       ],
       currentCard: null,
@@ -513,6 +514,7 @@ export async function joinGame(name, gameId) {
               currentPlayers.push({
                 name: name,
                 hand: [],
+                rank: "neutral",
               });
             }
 
@@ -587,6 +589,21 @@ export async function startGame(gameId) {
         1
       )[0];
       numCardsToDeal = 8;
+    } else if (data.game === "president") {
+      switch (players.length) {
+        case 2:
+          numCardsToDeal = [26, 26];
+          break;
+        case 3:
+          numCardsToDeal = [17, 17, 18];
+          break;
+        case 4:
+          numCardsToDeal = [13, 13, 13, 13];
+        case 5:
+          numCardsToDeal = [10, 10, 10, 11, 11];
+        case 6:
+          numCardsToDeal = [8, 8, 9, 9, 9, 9];
+      }
     }
 
     let toPickUpInit = 0;
@@ -599,11 +616,25 @@ export async function startGame(gameId) {
       }
     }
 
+    let startingPlayer = Math.floor(Math.random() * players.length);
+
     for (let i = 0; i < players.length; i++) {
-      players[i].hand = shuffledPond.splice(0, numCardsToDeal);
+      players[i].hand = shuffledPond.splice(
+        0,
+        data.game === "president"
+          ? numCardsToDeal[(i + startingPlayer) % players.length]
+          : numCardsToDeal
+      );
     }
 
-    let startingPlayer = Math.floor(Math.random() * players.length);
+    if (data.game === "president") {
+      startingPlayer = players.findIndex(
+        (player) =>
+          player.hand.filter(
+            (card) => card.rank === "3" && card.suit === "diamonds"
+          ).length > 0
+      );
+    }
 
     if (data.game === "goFish") {
       document
@@ -627,6 +658,19 @@ export async function startGame(gameId) {
           gameUpdate: `It's ${players[startingPlayer].name}'s turn`,
           currentCard: startingCard,
           toPickUp: toPickUpInit,
+        })
+        .then(() => {
+          console.log("started");
+        });
+    } else if (data.game === "president") {
+      document
+        .update({
+          pond: shuffledPond,
+          players: players,
+          started: true,
+          turn: startingPlayer,
+          gameUpdate: `It's ${players[startingPlayer].name}'s turn`,
+          currentCard: null,
         })
         .then(() => {
           console.log("started");
