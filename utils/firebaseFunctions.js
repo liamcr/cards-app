@@ -9,6 +9,10 @@ import {
   getNextPlayerGoFish,
 } from "./helperFunctions";
 
+/**********************************
+ * Async Storage
+ **********************************/
+
 /**
  * Saves game locally, so that the app can remember that the user
  * is a part of this game. This prevents users from joining a game
@@ -143,6 +147,10 @@ export async function removeGameLocally(gameId) {
   await AsyncStorage.setItem("cardGamesActive", JSON.stringify(localGamesJSON));
 }
 
+/**********************************
+ * General Firebase
+ **********************************/
+
 /**
  * Cancel game (i.e. Remove the game from Firebase)
  *
@@ -232,81 +240,6 @@ export async function leaveGame(name, gameId) {
 }
 
 /**
- * Takes card from opponent if possible. Returns a boolean representing
- * whether or not the opponent had the card the user was asking for
- *
- * @param {string} gameId The ID of the game in Firebase
- * @param {string} playerOneName The name of the player taking the card
- * @param {string} playerTwoName The name of the player that is having the card taken from them
- * @param {string} rank The rank of the card to take
- * @returns {boolean} True if the opponent had the card, false if not.
- */
-export async function takeCard(gameId, playerOneName, playerTwoName, rank) {
-  const document = firestore()
-    .collection("liveGames")
-    .doc(gameId);
-
-  let opponentHasCard;
-
-  await document.get().then(async (doc) => {
-    if (doc.exists) {
-      let data = doc.data();
-      let updatedPlayers = data.players;
-      let playerOneIndex, playerTwoIndex;
-      let playerTwoCardIndex = -1;
-
-      // Finds the position of both the user and the opponent
-      // in the game's players array
-      for (let i = 0; i < data.players.length; i++) {
-        let playerName = data.players[i].name;
-        if (playerName === playerOneName) {
-          playerOneIndex = i;
-        } else if (playerName === playerTwoName) {
-          playerTwoIndex = i;
-        }
-      }
-
-      // Finds the index of the card in question in player 2's hand.
-      // If the requested card is not in player 2's hand, playerTwoCardIndex
-      // remains at -1
-      for (let i = 0; i < data.players[playerTwoIndex].hand.length; i++) {
-        let cardRank = data.players[playerTwoIndex].hand[i].rank;
-
-        if (cardRank === rank) {
-          playerTwoCardIndex = i;
-          break;
-        }
-      }
-
-      if (playerTwoCardIndex !== -1) {
-        updatedPlayers[playerOneIndex].hand.push(
-          updatedPlayers[playerTwoIndex].hand[playerTwoCardIndex]
-        );
-        updatedPlayers[playerTwoIndex].hand.splice(playerTwoCardIndex, 1);
-
-        await document.update({
-          players: updatedPlayers,
-          gameUpdate: `${playerOneName} took a ${rank} from ${playerTwoName}!`,
-          mostRecentMove: [],
-        });
-
-        opponentHasCard = true;
-      } else {
-        await document.update({
-          gameUpdate: `${playerOneName} asked ${playerTwoName} for a ${rank}`,
-          turnState: "fishing",
-          mostRecentMove: [],
-        });
-
-        opponentHasCard = false;
-      }
-    }
-  });
-
-  return opponentHasCard;
-}
-
-/**
  * Logic for taking a card from the pond. It takes whatever card is at the bottom
  * of the deck, but because the deck is shuffled, it's essentially a random
  * card
@@ -389,271 +322,6 @@ export async function takeFromPond(gameId, name) {
   });
 
   return cardDrawn;
-}
-
-/**
- * Logic for picking up multiple cards from the deck in crazy eights.
- * If the deck becomes empty after the user picks up their cards,
- * the cards that have been played previously are shuffled
- * and put back into the deck.
- *
- * @param {string} gameId The ID of the game in Firebase
- * @param {string} name The name of the user picking up cards
- * @param {number} numToPickUp The number of cards the user has to pick up
- */
-export async function pickUpCE(gameId, name, numToPickUp) {
-  const document = firestore()
-    .collection("liveGames")
-    .doc(gameId);
-
-  await document.get().then(async (doc) => {
-    let data = doc.data();
-
-    if (numToPickUp + 1 > data.pond.length) {
-      data.pond = [...shuffle([...data.cardsPlayed]), ...data.pond];
-      data.cardsPlayed = [];
-    }
-
-    data.players
-      .find((player) => player.name === name)
-      .hand.push(...data.pond.splice(0, numToPickUp));
-
-    await document.update({
-      pond: data.pond,
-      cardsPlayed: data.cardsPlayed,
-      players: data.players,
-      toPickUp: 0,
-      mostRecentMove: [name, "pickUp"],
-    });
-  });
-}
-
-/**
- * Sets the turn state of a go fish game. Valid values are
- * "fishingToStart", "fishing", and "choosingCard"
- *
- * @param {string} gameId The ID of the game in Firebase
- * @param {string} turnState One of: "fishingToStart", "fishing", "choosingCard"
- */
-export async function setTurnState(gameId, turnState) {
-  await firestore()
-    .collection("liveGames")
-    .doc(gameId)
-    .update({
-      turnState: turnState,
-      mostRecentMove: [],
-    });
-}
-
-/**
- * Logic for finishing a turn in go fish. Sets the turn to the next player
- * and sets the turn state accordingly
- *
- * @param {string} gameId The ID of the game in Firebase
- * @param {object} gameState The overall state of the game
- */
-export async function finishTurn(gameId, gameState) {
-  const nextTurn = getNextPlayerGoFish(gameState);
-
-  let nextTurnStartingState =
-    gameState.players[nextTurn].hand.length === 0
-      ? "fishingToStart"
-      : "choosingCard";
-
-  await firestore()
-    .collection("liveGames")
-    .doc(gameId)
-    .update({
-      turn: nextTurn,
-      gameUpdate: `It's ${gameState.players[nextTurn].name}'s turn`,
-      turnState: nextTurnStartingState,
-      mostRecentMove: [],
-    });
-}
-
-/**
- * Logic for finishing a turn in crazy eights. Finds the next available player
- * and sets it to be their turn.
- *
- * @param {string} gameId The ID of the game in Firebase
- * @param {object} gameState The overall state of the game
- */
-export async function finishTurnCE(gameId, gameState) {
-  const nextTurn = getNextPlayerCE(gameState, false);
-
-  await firestore()
-    .collection("liveGames")
-    .doc(gameId)
-    .update({
-      turn: nextTurn,
-      gameUpdate: `It's ${gameState.players[nextTurn].name}'s turn`,
-      mostRecentMove: [],
-    });
-}
-
-/**
- * Logic for playing a card in crazy eights. Logic for special cards (2, J, QSpades)
- * is included in this function.
- *
- * @param {string} gameId The ID of the game in Firebase
- * @param {string} playerName The name of the user playing the card
- * @param {string} rank The rank of the card the user is playing
- * @param {string} suit The suit of the card the user is playing
- */
-export async function playCardCE(gameId, playerName, rank, suit) {
-  const document = firestore()
-    .collection("liveGames")
-    .doc(gameId);
-
-  await document.get().then(async (doc) => {
-    const docData = doc.data();
-
-    let toPickUp = docData.toPickUp;
-
-    if (rank === "2") {
-      toPickUp += 2;
-    } else if (rank === "Q" && suit === "spades") {
-      toPickUp += 5;
-    }
-
-    const nextTurn = getNextPlayerCE(docData, rank === "J");
-
-    const playerIndex = docData.players.findIndex(
-      (player) => player.name === playerName
-    );
-
-    const playersCopy = [...docData.players];
-    let playerRankingsCopy = [...docData.playerRankings];
-
-    if (
-      docData.cardsPlayed === null ||
-      docData.cardsPlayed.length === 0 ||
-      !docData.choosingSuit
-    ) {
-      playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
-        (card) => card.rank !== rank || card.suit !== suit
-      );
-    }
-
-    if (playersCopy[playerIndex].hand.length === 0) {
-      playerRankingsCopy.push(playerName);
-
-      if (playersCopy.filter((player) => player.hand.length > 0).length === 1) {
-        playerRankingsCopy.push(
-          playersCopy.find((player) => player.hand.length > 0).name
-        );
-      }
-    }
-
-    await document.update({
-      turn: nextTurn,
-      players: playersCopy,
-      gameUpdate: `It's ${docData.players[nextTurn].name}'s turn`,
-      currentCard: { rank: rank, suit: suit },
-      playerRankings: playerRankingsCopy,
-      cardsPlayed:
-        docData.currentCard !== null && docData.currentCard.rank !== "8"
-          ? [...docData.cardsPlayed, docData.currentCard]
-          : docData.currentCard === null
-          ? []
-          : docData.cardsPlayed,
-      toPickUp: toPickUp,
-      choosingSuit: false,
-      mostRecentMove: [playerName, "playCard"],
-    });
-  });
-}
-
-/**
- * Logic for removing a card from a user's hand without actually playing it.
- * Only used for choosing a suit after playing an 8.
- *
- * @param {string} gameId The ID of the game in Firebase
- * @param {string} name The name of the user that is having the card taken from them
- * @param {string} rank The rank of the card the user is playing
- * @param {string} suit The suit of the card the user is playing
- */
-export async function takeCardFromHandCE(gameId, name, rank, suit) {
-  const document = firestore()
-    .collection("liveGames")
-    .doc(gameId);
-
-  await document.get().then(async (doc) => {
-    const docData = doc.data();
-
-    const playerIndex = docData.players.findIndex(
-      (player) => player.name === name
-    );
-
-    const playersCopy = [...docData.players];
-
-    playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
-      (card) => card.rank !== rank || card.suit !== suit
-    );
-
-    await document.update({
-      players: playersCopy,
-      cardsPlayed: [...docData.cardsPlayed, { rank: rank, suit: suit }],
-      choosingSuit: true,
-    });
-  });
-}
-
-/**
- * Logic for pairing up a hand in go fish. Removes any duplicate-ranked
- * cards and adds them to the player's pairedCards array. Returns the number
- * of pairs found.
- *
- * @param {string} gameId The ID of the game in Firebase
- * @param {string} playerName Name of the user whose hand is being paired up
- * @returns {number} The number of pairs found in the hand
- */
-export async function pairUpHand(gameId, playerName) {
-  const document = firestore()
-    .collection("liveGames")
-    .doc(gameId);
-
-  let pairsFound = 0;
-
-  await document.get().then(async (doc) => {
-    if (doc.exists) {
-      let data = doc.data();
-
-      let playerIndex = data.players.findIndex(
-        (player) => player.name === playerName
-      );
-
-      let pairedCardsArr = data.players[playerIndex].pairedCards;
-      let numPairs = 0;
-      let arr = data.players[playerIndex].hand;
-      let sortedArr = [...arr];
-
-      sortedArr.sort((a, b) => {
-        return a.rank.localeCompare(b.rank);
-      });
-
-      for (let i = 1; i < sortedArr.length; i++) {
-        if (sortedArr[i].rank === sortedArr[i - 1].rank) {
-          numPairs++;
-          pairedCardsArr.push(sortedArr[i - 1], sortedArr[i]);
-
-          arr.splice(arr.indexOf(sortedArr[i]), 1);
-          arr.splice(arr.indexOf(sortedArr[i - 1]), 1);
-
-          i++;
-        }
-      }
-
-      data.players[playerIndex].numPairs += numPairs;
-      pairsFound = numPairs;
-
-      if (numPairs > 0) {
-        await document.update({ players: data.players, mostRecentMove: [] });
-      }
-    }
-  });
-
-  return pairsFound;
 }
 
 /**
@@ -986,4 +654,352 @@ export async function getGame(gameId) {
     });
 
   return gameData;
+}
+
+/**********************************
+ * Go Fish
+ **********************************/
+
+/**
+ * Takes card from opponent if possible. Returns a boolean representing
+ * whether or not the opponent had the card the user was asking for
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} playerOneName The name of the player taking the card
+ * @param {string} playerTwoName The name of the player that is having the card taken from them
+ * @param {string} rank The rank of the card to take
+ * @returns {boolean} True if the opponent had the card, false if not.
+ */
+export async function takeCard(gameId, playerOneName, playerTwoName, rank) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  let opponentHasCard;
+
+  await document.get().then(async (doc) => {
+    if (doc.exists) {
+      let data = doc.data();
+      let updatedPlayers = data.players;
+      let playerOneIndex, playerTwoIndex;
+      let playerTwoCardIndex = -1;
+
+      // Finds the position of both the user and the opponent
+      // in the game's players array
+      for (let i = 0; i < data.players.length; i++) {
+        let playerName = data.players[i].name;
+        if (playerName === playerOneName) {
+          playerOneIndex = i;
+        } else if (playerName === playerTwoName) {
+          playerTwoIndex = i;
+        }
+      }
+
+      // Finds the index of the card in question in player 2's hand.
+      // If the requested card is not in player 2's hand, playerTwoCardIndex
+      // remains at -1
+      for (let i = 0; i < data.players[playerTwoIndex].hand.length; i++) {
+        let cardRank = data.players[playerTwoIndex].hand[i].rank;
+
+        if (cardRank === rank) {
+          playerTwoCardIndex = i;
+          break;
+        }
+      }
+
+      if (playerTwoCardIndex !== -1) {
+        updatedPlayers[playerOneIndex].hand.push(
+          updatedPlayers[playerTwoIndex].hand[playerTwoCardIndex]
+        );
+        updatedPlayers[playerTwoIndex].hand.splice(playerTwoCardIndex, 1);
+
+        await document.update({
+          players: updatedPlayers,
+          gameUpdate: `${playerOneName} took a ${rank} from ${playerTwoName}!`,
+          mostRecentMove: [],
+        });
+
+        opponentHasCard = true;
+      } else {
+        await document.update({
+          gameUpdate: `${playerOneName} asked ${playerTwoName} for a ${rank}`,
+          turnState: "fishing",
+          mostRecentMove: [],
+        });
+
+        opponentHasCard = false;
+      }
+    }
+  });
+
+  return opponentHasCard;
+}
+
+/**
+ * Sets the turn state of a go fish game. Valid values are
+ * "fishingToStart", "fishing", and "choosingCard"
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} turnState One of: "fishingToStart", "fishing", "choosingCard"
+ */
+export async function setTurnState(gameId, turnState) {
+  await firestore()
+    .collection("liveGames")
+    .doc(gameId)
+    .update({
+      turnState: turnState,
+      mostRecentMove: [],
+    });
+}
+
+/**
+ * Logic for finishing a turn in go fish. Sets the turn to the next player
+ * and sets the turn state accordingly
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {object} gameState The overall state of the game
+ */
+export async function finishTurn(gameId, gameState) {
+  const nextTurn = getNextPlayerGoFish(gameState);
+
+  let nextTurnStartingState =
+    gameState.players[nextTurn].hand.length === 0
+      ? "fishingToStart"
+      : "choosingCard";
+
+  await firestore()
+    .collection("liveGames")
+    .doc(gameId)
+    .update({
+      turn: nextTurn,
+      gameUpdate: `It's ${gameState.players[nextTurn].name}'s turn`,
+      turnState: nextTurnStartingState,
+      mostRecentMove: [],
+    });
+}
+
+/**
+ * Logic for pairing up a hand in go fish. Removes any duplicate-ranked
+ * cards and adds them to the player's pairedCards array. Returns the number
+ * of pairs found.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} playerName Name of the user whose hand is being paired up
+ * @returns {number} The number of pairs found in the hand
+ */
+export async function pairUpHand(gameId, playerName) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  let pairsFound = 0;
+
+  await document.get().then(async (doc) => {
+    if (doc.exists) {
+      let data = doc.data();
+
+      let playerIndex = data.players.findIndex(
+        (player) => player.name === playerName
+      );
+
+      let pairedCardsArr = data.players[playerIndex].pairedCards;
+      let numPairs = 0;
+      let arr = data.players[playerIndex].hand;
+      let sortedArr = [...arr];
+
+      sortedArr.sort((a, b) => {
+        return a.rank.localeCompare(b.rank);
+      });
+
+      for (let i = 1; i < sortedArr.length; i++) {
+        if (sortedArr[i].rank === sortedArr[i - 1].rank) {
+          numPairs++;
+          pairedCardsArr.push(sortedArr[i - 1], sortedArr[i]);
+
+          arr.splice(arr.indexOf(sortedArr[i]), 1);
+          arr.splice(arr.indexOf(sortedArr[i - 1]), 1);
+
+          i++;
+        }
+      }
+
+      data.players[playerIndex].numPairs += numPairs;
+      pairsFound = numPairs;
+
+      if (numPairs > 0) {
+        await document.update({ players: data.players, mostRecentMove: [] });
+      }
+    }
+  });
+
+  return pairsFound;
+}
+
+/**********************************
+ * Crazy Eights
+ **********************************/
+
+/**
+ * Logic for picking up multiple cards from the deck in crazy eights.
+ * If the deck becomes empty after the user picks up their cards,
+ * the cards that have been played previously are shuffled
+ * and put back into the deck.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} name The name of the user picking up cards
+ * @param {number} numToPickUp The number of cards the user has to pick up
+ */
+export async function pickUpCE(gameId, name, numToPickUp) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    let data = doc.data();
+
+    if (numToPickUp + 1 > data.pond.length) {
+      data.pond = [...shuffle([...data.cardsPlayed]), ...data.pond];
+      data.cardsPlayed = [];
+    }
+
+    data.players
+      .find((player) => player.name === name)
+      .hand.push(...data.pond.splice(0, numToPickUp));
+
+    await document.update({
+      pond: data.pond,
+      cardsPlayed: data.cardsPlayed,
+      players: data.players,
+      toPickUp: 0,
+      mostRecentMove: [name, "pickUp"],
+    });
+  });
+}
+
+/**
+ * Logic for finishing a turn in crazy eights. Finds the next available player
+ * and sets it to be their turn.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {object} gameState The overall state of the game
+ */
+export async function finishTurnCE(gameId, gameState) {
+  const nextTurn = getNextPlayerCE(gameState, false);
+
+  await firestore()
+    .collection("liveGames")
+    .doc(gameId)
+    .update({
+      turn: nextTurn,
+      gameUpdate: `It's ${gameState.players[nextTurn].name}'s turn`,
+      mostRecentMove: [],
+    });
+}
+
+/**
+ * Logic for playing a card in crazy eights. Logic for special cards (2, J, QSpades)
+ * is included in this function.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} playerName The name of the user playing the card
+ * @param {string} rank The rank of the card the user is playing
+ * @param {string} suit The suit of the card the user is playing
+ */
+export async function playCardCE(gameId, playerName, rank, suit) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    const docData = doc.data();
+
+    let toPickUp = docData.toPickUp;
+
+    if (rank === "2") {
+      toPickUp += 2;
+    } else if (rank === "Q" && suit === "spades") {
+      toPickUp += 5;
+    }
+
+    const nextTurn = getNextPlayerCE(docData, rank === "J");
+
+    const playerIndex = docData.players.findIndex(
+      (player) => player.name === playerName
+    );
+
+    const playersCopy = [...docData.players];
+    let playerRankingsCopy = [...docData.playerRankings];
+
+    if (
+      docData.cardsPlayed === null ||
+      docData.cardsPlayed.length === 0 ||
+      !docData.choosingSuit
+    ) {
+      playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
+        (card) => card.rank !== rank || card.suit !== suit
+      );
+    }
+
+    if (playersCopy[playerIndex].hand.length === 0) {
+      playerRankingsCopy.push(playerName);
+
+      if (playersCopy.filter((player) => player.hand.length > 0).length === 1) {
+        playerRankingsCopy.push(
+          playersCopy.find((player) => player.hand.length > 0).name
+        );
+      }
+    }
+
+    await document.update({
+      turn: nextTurn,
+      players: playersCopy,
+      gameUpdate: `It's ${docData.players[nextTurn].name}'s turn`,
+      currentCard: { rank: rank, suit: suit },
+      playerRankings: playerRankingsCopy,
+      cardsPlayed:
+        docData.currentCard !== null && docData.currentCard.rank !== "8"
+          ? [...docData.cardsPlayed, docData.currentCard]
+          : docData.currentCard === null
+          ? []
+          : docData.cardsPlayed,
+      toPickUp: toPickUp,
+      choosingSuit: false,
+      mostRecentMove: [playerName, "playCard"],
+    });
+  });
+}
+
+/**
+ * Logic for removing a card from a user's hand without actually playing it.
+ * Only used for choosing a suit after playing an 8.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} name The name of the user that is having the card taken from them
+ * @param {string} rank The rank of the card the user is playing
+ * @param {string} suit The suit of the card the user is playing
+ */
+export async function takeCardFromHandCE(gameId, name, rank, suit) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    const docData = doc.data();
+
+    const playerIndex = docData.players.findIndex(
+      (player) => player.name === name
+    );
+
+    const playersCopy = [...docData.players];
+
+    playersCopy[playerIndex].hand = playersCopy[playerIndex].hand.filter(
+      (card) => card.rank !== rank || card.suit !== suit
+    );
+
+    await document.update({
+      players: playersCopy,
+      cardsPlayed: [...docData.cardsPlayed, { rank: rank, suit: suit }],
+      choosingSuit: true,
+    });
+  });
 }
