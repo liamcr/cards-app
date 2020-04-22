@@ -80,6 +80,7 @@ const JoinGame = ({ route, navigation }) => {
             >
               <Picker.Item label="Crazy Eights" value="crazyEights" />
               <Picker.Item label="Go Fish" value="goFish" />
+              <Picker.Item label="President" value="president" />
             </Picker>
           </View>
         )}

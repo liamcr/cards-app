@@ -5,7 +5,7 @@ import {
   ActivityIndicator,
   Button,
   StyleSheet,
-  Alert
+  Alert,
 } from "react-native";
 import theme from "../styles/theme.style";
 import { FlatList } from "react-native-gesture-handler";
@@ -13,7 +13,7 @@ import {
   cancelGame,
   leaveGame,
   removeGameLocally,
-  startGame
+  startGame,
 } from "../utils/firebaseFunctions";
 import firestore from "@react-native-firebase/firestore";
 
@@ -24,7 +24,8 @@ const WaitingRoom = ({ route, navigation }) => {
 
   const gameplayScreenMapping = {
     goFish: "Go Fish Gameplay",
-    crazyEights: "Crazy Eights Gameplay"
+    crazyEights: "Crazy Eights Gameplay",
+    president: "President Gameplay",
   };
 
   // Boolean that is checked when a user presses "Leave Game"
@@ -49,14 +50,14 @@ const WaitingRoom = ({ route, navigation }) => {
           text: "Cancel",
           onPress: () => {
             console.log("Didn't cancel game!");
-          }
+          },
         },
         {
           text: "OK",
           onPress: () => {
             cancelGame(gameId);
-          }
-        }
+          },
+        },
       ],
       { cancelable: false }
     );
@@ -74,7 +75,7 @@ const WaitingRoom = ({ route, navigation }) => {
           text: "Cancel",
           onPress: () => {
             console.log("Didn't leave game!");
-          }
+          },
         },
         {
           text: "OK",
@@ -88,12 +89,12 @@ const WaitingRoom = ({ route, navigation }) => {
                 .then(() => {
                   navigation.goBack();
                 })
-                .catch(error => {
+                .catch((error) => {
                   console.log(error.message);
                 });
             });
-          }
-        }
+          },
+        },
       ],
       { cancelable: false }
     );
@@ -103,7 +104,7 @@ const WaitingRoom = ({ route, navigation }) => {
     const unsubscribe = firestore()
       .collection("liveGames")
       .doc(gameId)
-      .onSnapshot(doc => {
+      .onSnapshot((doc) => {
         if (doc.exists) {
           let updatedData = doc.data();
           let newDocPlayers = updatedData.players;
@@ -122,12 +123,12 @@ const WaitingRoom = ({ route, navigation }) => {
           if (
             updatedData.started &&
             newDocPlayers.filter(
-              player => player.hand.length === startingHandLength
+              (player) => player.hand.length === startingHandLength
             ).length === newDocPlayers.length
           ) {
             navigation.replace(gameplayScreenMapping[updatedData.game], {
               gameId: gameId,
-              name: name
+              name: name,
             });
           }
         } else {
@@ -156,7 +157,7 @@ const WaitingRoom = ({ route, navigation }) => {
                   style={{
                     ...styles.listElement,
                     borderColor:
-                      item.name === name ? theme.PRIMARY_COLOUR : "#BABABA"
+                      item.name === name ? theme.PRIMARY_COLOUR : "#BABABA",
                   }}
                 >
                   <Text style={styles.playerName}>{item.name}</Text>
@@ -200,18 +201,18 @@ const styles = StyleSheet.create({
     height: "100%",
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-around"
+    justifyContent: "space-around",
   },
   codeContainer: {
-    width: "60%"
+    width: "60%",
   },
   codeText: {
     fontSize: 32,
-    textAlign: "center"
+    textAlign: "center",
   },
   listContainer: {
     height: "30%",
-    width: "60%"
+    width: "60%",
   },
   listElement: {
     backgroundColor: "white",
@@ -219,16 +220,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 4,
     margin: 4,
-    elevation: 5
+    elevation: 5,
   },
   playerName: {
-    fontSize: 20
+    fontSize: 20,
   },
   buttonContainer: {
     height: "15%",
     display: "flex",
-    justifyContent: "space-between"
-  }
+    justifyContent: "space-between",
+  },
 });
 
 export default WaitingRoom;

@@ -365,7 +365,7 @@ export async function generateRoomCode() {
  * Creates game object in Firebase
  *
  * @param {string} creatorName The name of the user that created the game
- * @param {string} gameType The type of game to play (Currently one of "goFish" or "crazyEights")
+ * @param {string} gameType The type of game to play (Currently one of "goFish", "crazyEights", or "president")
  * @returns {string} The ID of the game in Firebase
  */
 export async function createGame(creatorName, gameType) {
@@ -423,6 +423,24 @@ export async function createGame(creatorName, gameType) {
       toPickUp: 0,
       playerRankings: [],
       choosingSuit: false,
+      mostRecentMove: [],
+    };
+  } else if (gameType === "president") {
+    gameObject = {
+      game: gameType,
+      turn: 0,
+      started: false,
+      finished: false,
+      players: [
+        {
+          name: creatorName,
+          hand: [],
+        },
+      ],
+      currentCard: null,
+      pond: pondTemplate,
+      gameUpdate: "Game Starting...",
+      playerRankings: [],
       mostRecentMove: [],
     };
   }
@@ -489,7 +507,12 @@ export async function joinGame(name, gameId) {
             } else if (data.game === "crazyEights") {
               currentPlayers.push({
                 name: name,
-                hand: 0,
+                hand: [],
+              });
+            } else if (data.game === "president") {
+              currentPlayers.push({
+                name: name,
+                hand: [],
               });
             }
 
