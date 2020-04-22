@@ -9,11 +9,14 @@ import {
   getNextPlayerGoFish,
 } from "./helperFunctions";
 
-/* 
-  Saves game locally, so that the app can remember that the user
-  is a part of this game. This prevents users from joining a game
-  twice from the same phone.
-*/
+/**
+ * Saves game locally, so that the app can remember that the user
+ * is a part of this game. This prevents users from joining a game
+ * twice from the same phone.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} name The user's name in the game
+ */
 export async function setLocalData(gameId, name) {
   await AsyncStorage.getItem("cardGamesActive", (err, result) => {
     if (err) {
@@ -40,10 +43,12 @@ export async function setLocalData(gameId, name) {
   });
 }
 
-/*
-  Retrieves the games saved locally, and returns them in proper
-  JSON format.
-*/
+/**
+ * Retrieves the games saved locally, and returns them in proper
+ * JSON format.
+ *
+ * @returns {object} JSON representation of the locally saved games
+ */
 export async function getLocalData() {
   let localData;
 
@@ -58,10 +63,12 @@ export async function getLocalData() {
   return JSON.parse(localData);
 }
 
-/* 
-  Returns a Promise<Boolean> that checks to see if the user
-  has already joined the specified game.
-*/
+/**
+ * Checks to see if the user has already joined the specified game.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @returns {boolean} True if user is in game, false if not
+ */
 export async function isInGame(gameId) {
   let inGame = false;
   await AsyncStorage.getItem("cardGamesActive", (err, result) => {
@@ -80,9 +87,9 @@ export async function isInGame(gameId) {
   return inGame;
 }
 
-/*
-  Removes games from local storage that have been removed from firebase
-*/
+/**
+ * Removes games from local storage that have been removed from firebase
+ */
 export async function cleanLocalStorage() {
   let cleanedStorageString = await AsyncStorage.getItem(
     "cardGamesActive"
@@ -117,7 +124,11 @@ export async function cleanLocalStorage() {
   AsyncStorage.setItem("cardGamesActive", JSON.stringify(newStorage));
 }
 
-/* Removes a game from local storage object */
+/**
+ * Removes a game from local storage object
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ */
 export async function removeGameLocally(gameId) {
   let localGames = await AsyncStorage.getItem("cardGamesActive");
 
@@ -132,7 +143,11 @@ export async function removeGameLocally(gameId) {
   await AsyncStorage.setItem("cardGamesActive", JSON.stringify(localGamesJSON));
 }
 
-/* Cancel game (i.e. Remove the game from Firebase) */
+/**
+ * Cancel game (i.e. Remove the game from Firebase)
+ *
+ * @param {string} gameId Cancel game (i.e. Remove the game from Firebase)
+ */
 export async function cancelGame(gameId) {
   await firestore()
     .collection("liveGames")
@@ -140,10 +155,12 @@ export async function cancelGame(gameId) {
     .delete();
 }
 
-/* 
-  Reverts a completed game back to its original state so that the game can 
-  be played again 
-*/
+/**
+ * Reverts a completed game back to its original state so that the game can
+ * be played again
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ */
 export async function resetGame(gameId) {
   const document = firestore()
     .collection("liveGames")
@@ -187,7 +204,12 @@ export async function resetGame(gameId) {
   });
 }
 
-/* Remove the user from the players array in Firebase */
+/**
+ * Remove the user from the players array in Firebase
+ *
+ * @param {string} name Name of the player that should be removed
+ * @param {string} gameId The ID of the game in Firebase
+ */
 export async function leaveGame(name, gameId) {
   let document = firestore()
     .collection("liveGames")
@@ -209,8 +231,16 @@ export async function leaveGame(name, gameId) {
   });
 }
 
-/* Takes card from opponent if possible. Returns a boolean representing
-   whether or not the opponent had the card the user was asking for */
+/**
+ * Takes card from opponent if possible. Returns a boolean representing
+ * whether or not the opponent had the card the user was asking for
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} playerOneName The name of the player taking the card
+ * @param {string} playerTwoName The name of the player that is having the card taken from them
+ * @param {string} rank The rank of the card to take
+ * @returns {boolean} True if the opponent had the card, false if not.
+ */
 export async function takeCard(gameId, playerOneName, playerTwoName, rank) {
   const document = firestore()
     .collection("liveGames")
@@ -276,9 +306,15 @@ export async function takeCard(gameId, playerOneName, playerTwoName, rank) {
   return opponentHasCard;
 }
 
-/* Logic for taking a card from the pond. It takes whatever card is at the bottom
-   of the deck, but because the deck is shuffled, it's essentially a random
-   card */
+/**
+ * Logic for taking a card from the pond. It takes whatever card is at the bottom
+ * of the deck, but because the deck is shuffled, it's essentially a random
+ * card
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} name The name of the player that is taking from the pond
+ * @returns {object} The card that the user drew from the pond
+ */
 export async function takeFromPond(gameId, name) {
   const document = firestore()
     .collection("liveGames")
@@ -355,12 +391,16 @@ export async function takeFromPond(gameId, name) {
   return cardDrawn;
 }
 
-/*
-  Logic for picking up multiple cards from the deck in crazy eights.
-  If the deck becomes empty after the user picks up their cards,
-  the cards that have been played previously are shuffled
-  and put back into the deck.
-*/
+/**
+ * Logic for picking up multiple cards from the deck in crazy eights.
+ * If the deck becomes empty after the user picks up their cards,
+ * the cards that have been played previously are shuffled
+ * and put back into the deck.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} name The name of the user picking up cards
+ * @param {number} numToPickUp The number of cards the user has to pick up
+ */
 export async function pickUpCE(gameId, name, numToPickUp) {
   const document = firestore()
     .collection("liveGames")
@@ -388,10 +428,13 @@ export async function pickUpCE(gameId, name, numToPickUp) {
   });
 }
 
-/*
-  Sets the turn state of a go fish game. Valid values are
-  "fishingToStart", "fishing", and "choosingCard"
-*/
+/**
+ * Sets the turn state of a go fish game. Valid values are
+ * "fishingToStart", "fishing", and "choosingCard"
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} turnState One of: "fishingToStart", "fishing", "choosingCard"
+ */
 export async function setTurnState(gameId, turnState) {
   await firestore()
     .collection("liveGames")
@@ -402,10 +445,13 @@ export async function setTurnState(gameId, turnState) {
     });
 }
 
-/*
-  Logic for finishing a turn in go fish. Sets the turn to the next player
-  and sets the turn state accordingly
-*/
+/**
+ * Logic for finishing a turn in go fish. Sets the turn to the next player
+ * and sets the turn state accordingly
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {object} gameState The overall state of the game
+ */
 export async function finishTurn(gameId, gameState) {
   const nextTurn = getNextPlayerGoFish(gameState);
 
@@ -425,10 +471,13 @@ export async function finishTurn(gameId, gameState) {
     });
 }
 
-/*
-  Logic for finishing a turn in crazy eights. Finds the next available player
-  and sets it to be their turn.
-*/
+/**
+ * Logic for finishing a turn in crazy eights. Finds the next available player
+ * and sets it to be their turn.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {object} gameState The overall state of the game
+ */
 export async function finishTurnCE(gameId, gameState) {
   const nextTurn = getNextPlayerCE(gameState, false);
 
@@ -442,10 +491,15 @@ export async function finishTurnCE(gameId, gameState) {
     });
 }
 
-/*
-  Logic for playing a card in crazy eights. Logic for special cards (2, J, QSpades)
-  is included in this function.
-*/
+/**
+ * Logic for playing a card in crazy eights. Logic for special cards (2, J, QSpades)
+ * is included in this function.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} playerName The name of the user playing the card
+ * @param {string} rank The rank of the card the user is playing
+ * @param {string} suit The suit of the card the user is playing
+ */
 export async function playCardCE(gameId, playerName, rank, suit) {
   const document = firestore()
     .collection("liveGames")
@@ -510,10 +564,15 @@ export async function playCardCE(gameId, playerName, rank, suit) {
   });
 }
 
-/*
-  Logic for removing a card from a user's hand without actually playing it.
-  Only used for choosing a suit after playing an 8.
-*/
+/**
+ * Logic for removing a card from a user's hand without actually playing it.
+ * Only used for choosing a suit after playing an 8.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} name The name of the user that is having the card taken from them
+ * @param {string} rank The rank of the card the user is playing
+ * @param {string} suit The suit of the card the user is playing
+ */
 export async function takeCardFromHandCE(gameId, name, rank, suit) {
   const document = firestore()
     .collection("liveGames")
@@ -540,11 +599,15 @@ export async function takeCardFromHandCE(gameId, name, rank, suit) {
   });
 }
 
-/*
-  Logic for pairing up a hand in go fish. Removes any duplicate-ranked
-  cards and adds them to the player's pairedCards array. Returns the number
-  of pairs found.
-*/
+/**
+ * Logic for pairing up a hand in go fish. Removes any duplicate-ranked
+ * cards and adds them to the player's pairedCards array. Returns the number
+ * of pairs found.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} playerName Name of the user whose hand is being paired up
+ * @returns {number} The number of pairs found in the hand
+ */
 export async function pairUpHand(gameId, playerName) {
   const document = firestore()
     .collection("liveGames")
@@ -593,10 +656,13 @@ export async function pairUpHand(gameId, playerName) {
   return pairsFound;
 }
 
-/* Makes a room code that is unique across the whole database.
-  After 10 failed attempts to make a unique code, it times out and
-  throws an error.
-*/
+/**
+ * Makes a room code that is unique across the whole database.
+ * After 10 failed attempts to make a unique code, it times out and
+ * throws an error.
+ *
+ * @returns {string} A unique room code
+ */
 export async function generateRoomCode() {
   let numTries = 0;
   let exists = true;
@@ -627,9 +693,13 @@ export async function generateRoomCode() {
   }
 }
 
-/*
-  Creates game object in Firebase
-*/
+/**
+ * Creates game object in Firebase
+ *
+ * @param {string} creatorName The name of the user that created the game
+ * @param {string} gameType The type of game to play (Currently one of "goFish" or "crazyEights")
+ * @returns {string} The ID of the game in Firebase
+ */
 export async function createGame(creatorName, gameType) {
   // Define create game logic here
 
@@ -707,12 +777,15 @@ export async function createGame(creatorName, gameType) {
   return gameId;
 }
 
-/*
-  Adds a player to a game. Throws error when:
-  1. User is already in the game
-  2. The game has already started
-  3. The game doesn't yet exist
-*/
+/**
+ * Adds a player to a game. Throws error when:
+ * 1. User is already in the game
+ * 2. The game has already started
+ * 3. The game doesn't yet exist
+ *
+ * @param {string} name The name of the user that wants to join the game
+ * @param {string} gameId The ID of the game in Firebase
+ */
 export async function joinGame(name, gameId) {
   // Define join game logic here
   console.log("Joining game...");
@@ -794,9 +867,11 @@ export async function joinGame(name, gameId) {
   }
 }
 
-/*
-  Initializes a game in firebase to a state valid to start a game in.
-*/
+/**
+ * Initializes a game in firebase to a state valid to start a game in.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ */
 export async function startGame(gameId) {
   const document = firestore()
     .collection("liveGames")
@@ -869,9 +944,11 @@ export async function startGame(gameId) {
   });
 }
 
-/*
-  Sets the game in firebase to finished
-*/
+/**
+ * Sets the game in firebase to finished
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ */
 export async function endGame(gameId) {
   await firestore()
     .collection("liveGames")
@@ -879,13 +956,13 @@ export async function endGame(gameId) {
     .update({ finished: true, mostRecentMove: [] });
 }
 
-/* 
-   Returns game data based on a given game ID.
-   gameId: string - The 4-digit game code
-   Returns: A promise - promise will contain game
-   data once Firebase returns it. Promise will
-   contain null if the given gameId is not found.
-*/
+/**
+ * Returns game data based on a given game ID. Will return null if
+ * game ID does not exist.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @returns {object} The game data of the requested game.
+ */
 export async function getGame(gameId) {
   let gameData;
 
