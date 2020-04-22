@@ -125,7 +125,7 @@ export async function cleanLocalStorage() {
   }
 
   console.log("Cleaned local storage");
-  AsyncStorage.setItem("cardGamesActive", JSON.stringify(newStorage));
+  await AsyncStorage.setItem("cardGamesActive", JSON.stringify(newStorage));
 }
 
 /**

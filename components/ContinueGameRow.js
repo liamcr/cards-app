@@ -10,11 +10,13 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
   const gameTypeMapping = {
     goFish: "Go Fish",
     crazyEights: "Crazy Eights",
+    president: "President",
   };
 
   const gameplayScreenMapping = {
     goFish: "Go Fish Gameplay",
     crazyEights: "Crazy Eights Gameplay",
+    president: "President Gameplay",
   };
 
   const finishedGameScreenMapping = {
@@ -59,7 +61,7 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
 
   useEffect(() => {
     getGame(gameId).then((data) => {
-      if (gameData === null) {
+      if (data === null) {
         removeGameLocally(gameId).catch((err) => {
           console.log(err.message);
         });
