@@ -90,16 +90,29 @@ export function isValidPlay(cards, currentCard) {
   let errorMessage = null;
 
   if (currentCard !== null) {
-    if (currentCard.length !== cards.length) {
-      errorMessage = `You have to play ${currentCard.length} card${
-        currentCard.length > 1 ? "s" : ""
-      }`;
-    } else if (
-      PresCardValues[currentCard[0].rank] > PresCardValues[cards[0].rank]
-    ) {
-      errorMessage = `You have to play a card of equal or greater value than a ${
-        currentCard[0].rank
-      }`;
+    if (cards[0].rank === "2") {
+      if (currentCard.length === 1 && cards.length > 1) {
+        errorMessage = "You only need to play 1 two to burn this card";
+      } else if (
+        currentCard.length > 1 &&
+        cards.length !== currentCard.length - 1
+      ) {
+        errorMessage = `You need ${currentCard.length - 1} two${
+          currentCard.length - 1 > 1 ? "s" : ""
+        } to burn these cards`;
+      }
+    } else {
+      if (currentCard.length !== cards.length) {
+        errorMessage = `You have to play ${currentCard.length} card${
+          currentCard.length > 1 ? "s" : ""
+        }`;
+      } else if (
+        PresCardValues[currentCard[0].rank] > PresCardValues[cards[0].rank]
+      ) {
+        errorMessage = `You have to play a card of equal or greater value than a ${
+          currentCard[0].rank
+        }`;
+      }
     }
   }
 
