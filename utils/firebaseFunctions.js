@@ -3,6 +3,7 @@ import firestore from "@react-native-firebase/firestore";
 import pondTemplate from "../utils/pondTemplate.json";
 import AsyncStorage from "@react-native-community/async-storage";
 import MaxPlayers from "./gameMaxPlayers.json";
+import PresCardValues from "./presidentCardValues.json";
 import {
   shuffle,
   getNextPlayerCE,
@@ -1074,4 +1075,71 @@ export async function takeCardFromHandCE(gameId, name, rank, suit) {
       choosingSuit: true,
     });
   });
+}
+
+/**********************************
+ * President
+ **********************************/
+
+/**
+ * Logic for playing a card in President. Throws an error if the
+ * requested play is not valid.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} name Name of the user playing
+ * @param {Array} cards Cards the user wants to play
+ */
+export async function PlayCardPres(gameId, name, cards) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  let errorMessage = null;
+
+  await document.get().then(async (doc) => {
+    const docData = doc.data();
+
+    if (docData.currentCard !== null) {
+      if (docData.currentCard.length !== cards.length) {
+        errorMessage = `You have to play ${docData.currentCard.length} cards`;
+        return;
+      } else if (
+        PresCardValues[docData.currentCard[0].rank] >
+        PresCardValues[cards[0].rank]
+      ) {
+        errorMessage = `You have to play a card of equal or greater value than a ${
+          docData.currentCard[0].rank
+        }`;
+        return;
+      }
+    }
+
+    // If the code reaches here, then it is a valid play
+
+    let players = [...docData.players];
+    const playerInd = players.findIndex((player) => player.name === name);
+    let cardIndicies = [];
+
+    for (let i = 0; i < cards.length; i++) {
+      cardIndicies.push(
+        players[playerInd].hand.findIndex(
+          (card) => card.rank === cards[i].rank && card.suit === cards[i].suit
+        )
+      );
+    }
+
+    for (let i = cards.length - 1; i >= 0; i--) {
+      players[playerInd].hand.splice(cardIndicies[i], 1);
+    }
+
+    await document.update({
+      currentCard: cards,
+      mostRecentMove: [name, "playCard"],
+      players: players,
+    });
+  });
+
+  if (errorMessage) {
+    throw new Error(errorMessage);
+  }
 }

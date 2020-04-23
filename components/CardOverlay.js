@@ -1,70 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Animated } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import themeStyle from "../styles/theme.style";
 import Checkmark from "../assets/checkmark.png";
 
 const CardOverlay = ({ selected }) => {
-  const [opacity] = useState(new Animated.Value(0.0));
-  const [circleScale] = useState(new Animated.Value(0));
-  const [imageScale] = useState(new Animated.Value(0));
+  const [opacity, setOpacity] = useState(0);
+  const [circleScale, setCircleScale] = useState(0);
+  const [imageScale, setImageScale] = useState(0);
 
   useEffect(() => {
     if (selected) {
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 1.0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(circleScale, {
-          toValue: 1.0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(imageScale, {
-          toValue: 1.0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        opacity.setValue(1.0);
-        circleScale.setValue(1.0);
-        imageScale.setValue(1.0);
-      });
+      setOpacity(1);
+      setCircleScale(1);
+      setImageScale(1);
     } else {
-      Animated.sequence([
-        Animated.spring(imageScale, {
-          toValue: 0.0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(circleScale, {
-          toValue: 0.0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start(() => {
-          opacity.setValue(0.0);
-          circleScale.setValue(0.0);
-          imageScale.setValue(0.0);
-        }),
-      ]);
+      setOpacity(0);
+      setCircleScale(0);
+      setImageScale(0);
     }
   }, [selected]);
 
   return (
-    <Animated.View style={{ ...styles.cardSelectedOverlay, opacity: opacity }}>
-      <Animated.View
+    <View style={{ ...styles.cardSelectedOverlay, opacity: opacity }}>
+      <View
         style={{
           ...styles.checkMarkContainer,
           transform: [{ scaleX: circleScale }, { scaleY: circleScale }],
         }}
       >
-        <Animated.Image
+        <Image
           source={Checkmark}
           style={{
             height: 24,
@@ -72,8 +36,8 @@ const CardOverlay = ({ selected }) => {
             transform: [{ scaleX: imageScale }, { scaleY: imageScale }],
           }}
         />
-      </Animated.View>
-    </Animated.View>
+      </View>
+    </View>
   );
 };
 

@@ -53,6 +53,7 @@ const PresidentGameplayPage = ({ route, navigation }) => {
           <PresidentHand
             gameId={gameId}
             playerObj={gameState.players.find((player) => player.name === name)}
+            gameState={gameState}
           />
         </View>
       </View>

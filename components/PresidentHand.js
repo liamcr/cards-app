@@ -1,20 +1,40 @@
 import React, { useState } from "react";
-import {
-  FlatList,
-  TouchableOpacity,
-  ToastAndroid,
-  StyleSheet,
-  Text,
-} from "react-native";
-import Card from "./Card";
-import CardOverlay from "./CardOverlay";
+import { FlatList, ToastAndroid, StyleSheet, Text } from "react-native";
 import GestureRecognizer from "react-native-swipe-gestures";
+import { PlayCardPres } from "../utils/firebaseFunctions";
+import PresidentHandCard from "./PresidentHandCard";
+import { isValidPlay } from "../utils/helperFunctions";
 
-const PresidentHand = ({ gameId, playerObj }) => {
+const PresidentHand = ({ gameId, playerObj, gameState }) => {
   const [selected, setSelected] = useState(playerObj.hand.map(() => false));
 
   const onSwipeUp = () => {
-    // Submit cards to firebase
+    let errorMessage = isValidPlay(
+      playerObj.hand.filter((card, index) => selected[index]),
+      gameState.currentCard
+    );
+    if (errorMessage !== null) {
+      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+    } else {
+      setSelected((oldSelected) =>
+        oldSelected
+          .slice(
+            0,
+            oldSelected.length -
+              oldSelected.filter((isSelected) => isSelected).length
+          )
+          .map(() => false)
+      );
+
+      // Submit cards to firebase
+      PlayCardPres(
+        gameId,
+        playerObj.name,
+        playerObj.hand.filter((card, index) => selected[index])
+      ).catch((error) => {
+        console.error(error.message);
+      });
+    }
   };
 
   const onPress = (index) => {
@@ -37,20 +57,20 @@ const PresidentHand = ({ gameId, playerObj }) => {
     }
   };
 
-  const renderCard = ({ item, index }) => (
-    <TouchableOpacity onPress={() => onPress(index)}>
-      <Card rank={item.rank} suit={item.suit} />
-      <CardOverlay selected={selected[index]} />
-    </TouchableOpacity>
-  );
-
   return (
     <GestureRecognizer onSwipeUp={onSwipeUp}>
       <Text style={styles.headerText}>Your hand:</Text>
       <FlatList
         horizontal
         data={playerObj.hand}
-        renderItem={renderCard}
+        renderItem={({ item, index }) => (
+          <PresidentHandCard
+            rank={item.rank}
+            suit={item.suit}
+            selected={selected[index]}
+            onPress={() => onPress(index)}
+          />
+        )}
         keyExtractor={(item, index) => index.toString()}
       />
     </GestureRecognizer>

@@ -1,3 +1,5 @@
+import PresCardValues from "./presidentCardValues.json";
+
 /**
  * Shuffles an array's values and returns the modified array
  *
@@ -73,21 +75,33 @@ export function getNextPlayerGoFish(gameState) {
  * @param {object} cardTwo The second card in the comparison
  */
 export function cardComparison(cardOne, cardTwo) {
-  const cardVals = {
-    "3": 1,
-    "4": 2,
-    "5": 3,
-    "6": 4,
-    "7": 5,
-    "8": 6,
-    "9": 7,
-    "10": 8,
-    J: 9,
-    Q: 10,
-    K: 11,
-    A: 12,
-    "2": 13,
-  };
+  return PresCardValues[cardOne.rank] - PresCardValues[cardTwo.rank];
+}
 
-  return cardVals[cardOne.rank] - cardVals[cardTwo.rank];
+/**
+ * Function that returns a null if a play is valid in President, and
+ * an error message if a play is invalid.
+ *
+ * @param {Array} cards Cards the user wants to play
+ * @param {Array} currentCard The cards currently played
+ * @returns {string|null} An error message if the move is invalid, null if not
+ */
+export function isValidPlay(cards, currentCard) {
+  let errorMessage = null;
+
+  if (currentCard !== null) {
+    if (currentCard.length !== cards.length) {
+      errorMessage = `You have to play ${currentCard.length} card${
+        currentCard.length > 1 ? "s" : ""
+      }`;
+    } else if (
+      PresCardValues[currentCard[0].rank] > PresCardValues[cards[0].rank]
+    ) {
+      errorMessage = `You have to play a card of equal or greater value than a ${
+        currentCard[0].rank
+      }`;
+    }
+  }
+
+  return errorMessage;
 }
