@@ -293,11 +293,6 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "space-between",
   },
-  userHandContainer: {
-    height: 144,
-    backgroundColor: "#F2F2F2",
-    marginTop: 8,
-  },
   opponentContainer: {
     height: "50%",
     display: "flex",

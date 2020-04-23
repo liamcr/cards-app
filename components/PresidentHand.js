@@ -17,7 +17,7 @@ const PresidentHand = ({ gameId, playerObj }) => {
     // Submit cards to firebase
   };
 
-  const onHoldDown = (index) => {
+  const onPress = (index) => {
     const indOfFirstSelected = selected.findIndex((isSelected) => isSelected);
 
     if (
@@ -38,7 +38,7 @@ const PresidentHand = ({ gameId, playerObj }) => {
   };
 
   const renderCard = ({ item, index }) => (
-    <TouchableOpacity onLongPress={() => onHoldDown(index)}>
+    <TouchableOpacity onPress={() => onPress(index)}>
       <Card rank={item.rank} suit={item.suit} />
       <CardOverlay selected={selected[index]} />
     </TouchableOpacity>

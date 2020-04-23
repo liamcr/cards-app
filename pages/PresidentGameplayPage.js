@@ -3,6 +3,8 @@ import { View, StyleSheet } from "react-native";
 import PresidentHand from "../components/PresidentHand";
 import firestore from "@react-native-firebase/firestore";
 import LoadingOverlay from "../components/LoadingOverlay";
+import PresidentPlayedCard from "../components/PresidentPlayedCard";
+import OpponentStateContainer from "../components/OpponentStateContainer";
 
 const PresidentGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -32,7 +34,21 @@ const PresidentGameplayPage = ({ route, navigation }) => {
   } else {
     return (
       <View style={styles.gameplayContainer}>
-        <View style={styles.opponentContainer} />
+        <View style={styles.opponentContainer}>
+          <PresidentPlayedCard
+            playedCard={gameState.currentCard}
+            mostRecentMove={gameState.mostRecentMove}
+            players={gameState.players}
+            name={name}
+          />
+          <OpponentStateContainer
+            userIndex={gameState.players.findIndex(
+              (player) => player.name === name
+            )}
+            playerArr={gameState.players}
+            gameState={gameState}
+          />
+        </View>
         <View style={styles.userContainer}>
           <PresidentHand
             gameId={gameId}
@@ -49,6 +65,16 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "space-between",
     height: "100%",
+  },
+  userContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+  },
+  opponentContainer: {
+    height: "50%",
+    display: "flex",
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
 });
 
