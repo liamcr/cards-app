@@ -9,6 +9,7 @@ import {
   getNextPlayerCE,
   getNextPlayerGoFish,
   cardComparison,
+  isCardBurned,
 } from "./helperFunctions";
 
 /**********************************
@@ -445,6 +446,7 @@ export async function createGame(creatorName, gameType) {
       gameUpdate: "Game Starting...",
       playerRankings: [],
       mostRecentMove: [],
+      burning: false,
     };
   }
 
@@ -1082,8 +1084,8 @@ export async function takeCardFromHandCE(gameId, name, rank, suit) {
  **********************************/
 
 /**
- * Logic for playing a card in President. Throws an error if the
- * requested play is not valid.
+ * Logic for playing a card in President. There is an assumption that
+ * helper function isValidPlay() is being called before this function.
  *
  * @param {string} gameId The ID of the game in Firebase
  * @param {string} name Name of the user playing
@@ -1099,26 +1101,11 @@ export async function PlayCardPres(gameId, name, cards) {
   await document.get().then(async (doc) => {
     const docData = doc.data();
 
-    if (docData.currentCard !== null) {
-      if (docData.currentCard.length !== cards.length) {
-        errorMessage = `You have to play ${docData.currentCard.length} cards`;
-        return;
-      } else if (
-        PresCardValues[docData.currentCard[0].rank] >
-        PresCardValues[cards[0].rank]
-      ) {
-        errorMessage = `You have to play a card of equal or greater value than a ${
-          docData.currentCard[0].rank
-        }`;
-        return;
-      }
-    }
-
-    // If the code reaches here, then it is a valid play
-
     let players = [...docData.players];
     const playerInd = players.findIndex((player) => player.name === name);
     let cardIndicies = [];
+    const burned = isCardBurned(cards, docData.currentCard);
+    let nextTurn = burned ? docData.turn : getNextPlayerCE(docData, false);
 
     for (let i = 0; i < cards.length; i++) {
       cardIndicies.push(
@@ -1136,10 +1123,36 @@ export async function PlayCardPres(gameId, name, cards) {
       currentCard: cards,
       mostRecentMove: [name, "playCard"],
       players: players,
+      turn: nextTurn,
+      gameUpdate: `It's ${docData.players[nextTurn].name}'s turn`,
+      burning: burned,
     });
   });
 
   if (errorMessage) {
     throw new Error(errorMessage);
   }
+}
+
+/**
+ * Burns played card if card should be burned.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ */
+export async function burnCard(gameId) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    let docData = doc.data();
+
+    if (docData.burning) {
+      await document.update({
+        currentCard: null,
+        burning: false,
+        mostRecentMove: ["", "burnCard"],
+      });
+    }
+  });
 }

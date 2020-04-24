@@ -118,3 +118,34 @@ export function isValidPlay(cards, currentCard) {
 
   return errorMessage;
 }
+
+/**
+ * Helper function to determine whether or not the cards are going to be burned
+ * based on the ongoing play.
+ *
+ * @param {Array} playedCard Array of cards to be played
+ * @param {Array} currentCard Array of cards currently played
+ * @returns {boolean} True if the cards will be burned, false if not
+ */
+export function isCardBurned(playedCard, currentCard) {
+  if (currentCard === null) {
+    return false;
+  } else if (playedCard[0].rank === "2") {
+    if (currentCard.length === 1 && playedCard.length === 1) {
+      return true;
+    } else if (currentCard.length === playedCard.length + 1) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    if (
+      playedCard.length === currentCard.length &&
+      playedCard[0].rank === currentCard[0].rank
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}

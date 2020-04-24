@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { FlatList, ToastAndroid, StyleSheet, Text } from "react-native";
+import {
+  FlatList,
+  ToastAndroid,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { PlayCardPres } from "../utils/firebaseFunctions";
-import PresidentHandCard from "./PresidentHandCard";
 import { isValidPlay } from "../utils/helperFunctions";
+import Card from "./Card";
+import CardOverlay from "./CardOverlay";
 
 const PresidentHand = ({ gameId, playerObj, gameState }) => {
   const [selected, setSelected] = useState(playerObj.hand.map(() => false));
@@ -64,12 +71,16 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
         horizontal
         data={playerObj.hand}
         renderItem={({ item, index }) => (
-          <PresidentHandCard
-            rank={item.rank}
-            suit={item.suit}
-            selected={selected[index]}
+          <TouchableOpacity
+            disabled={
+              gameState.players[gameState.turn].name !== playerObj.name ||
+              gameState.burning
+            }
             onPress={() => onPress(index)}
-          />
+          >
+            <Card rank={item.rank} suit={item.suit} />
+            <CardOverlay selected={selected[index]} />
+          </TouchableOpacity>
         )}
         keyExtractor={(item, index) => index.toString()}
       />

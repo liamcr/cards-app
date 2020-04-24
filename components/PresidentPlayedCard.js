@@ -7,8 +7,15 @@ import {
   useWindowDimensions,
 } from "react-native";
 import Card from "./Card";
+import { burnCard } from "../utils/firebaseFunctions";
 
-const PresidentPlayedCard = ({ playedCard, mostRecentMove, players, name }) => {
+const PresidentPlayedCard = ({
+  playedCard,
+  mostRecentMove,
+  players,
+  name,
+  gameId,
+}) => {
   const [previousCard, setPreviousCard] = useState(null);
   const [currentCard, setCurrentCard] = useState(null);
 
@@ -17,6 +24,7 @@ const PresidentPlayedCard = ({ playedCard, mostRecentMove, players, name }) => {
   const [xOffset] = useState(new Animated.Value(0));
   const [scale] = useState(new Animated.Value(0.2));
   const [opacity] = useState(new Animated.Value(0));
+  const [prevOpacity] = useState(new Animated.Value(1));
 
   const numPlayers = players.length;
   const screenHeight = useWindowDimensions().height;
@@ -108,6 +116,8 @@ const PresidentPlayedCard = ({ playedCard, mostRecentMove, players, name }) => {
             setPreviousCard(playedCard);
             opacity.setValue(0);
             scale.setValue(0.2);
+
+            burnCard(gameId);
           });
         } else if (numPlayers === 2 * numTurnsAway) {
           yOffset.setValue(yOffsets.top);
@@ -143,6 +153,17 @@ const PresidentPlayedCard = ({ playedCard, mostRecentMove, players, name }) => {
           setPreviousCard(playedCard);
         }
       }
+    } else if (mostRecentMove.length > 0 && mostRecentMove[1] === "burnCard") {
+      setCurrentCard(null);
+
+      Animated.timing(prevOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setPreviousCard(null);
+        prevOpacity.setValue(1);
+      });
     }
   }, [playedCard, mostRecentMove, players, name]);
 
@@ -152,7 +173,7 @@ const PresidentPlayedCard = ({ playedCard, mostRecentMove, players, name }) => {
         <Text style={styles.noCardText}>No Card Played</Text>
       </View>
       {previousCard !== null && (
-        <View style={styles.previousCard}>
+        <Animated.View style={{ ...styles.previousCard, opacity: prevOpacity }}>
           {previousCard.map((card, index) => (
             <View
               key={index}
@@ -164,7 +185,7 @@ const PresidentPlayedCard = ({ playedCard, mostRecentMove, players, name }) => {
               <Card rank={card.rank} suit={card.suit} />
             </View>
           ))}
-        </View>
+        </Animated.View>
       )}
       {currentCard !== null && (
         <Animated.View

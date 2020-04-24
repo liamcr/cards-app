@@ -5,6 +5,7 @@ import firestore from "@react-native-firebase/firestore";
 import LoadingOverlay from "../components/LoadingOverlay";
 import PresidentPlayedCard from "../components/PresidentPlayedCard";
 import OpponentStateContainer from "../components/OpponentStateContainer";
+import UserPrompt from "../components/UserPrompt";
 
 const PresidentGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -40,6 +41,7 @@ const PresidentGameplayPage = ({ route, navigation }) => {
             mostRecentMove={gameState.mostRecentMove}
             players={gameState.players}
             name={name}
+            gameId={gameId}
           />
           <OpponentStateContainer
             userIndex={gameState.players.findIndex(
@@ -50,6 +52,7 @@ const PresidentGameplayPage = ({ route, navigation }) => {
           />
         </View>
         <View style={styles.userContainer}>
+          <UserPrompt gameState={gameState} name={name} />
           <PresidentHand
             gameId={gameId}
             playerObj={gameState.players.find((player) => player.name === name)}

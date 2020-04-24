@@ -44,6 +44,16 @@ const UserPrompt = ({
         </View>
       );
     }
+  } else if (gameState.game === "president") {
+    return (
+      <View style={styles.askForCardContainer}>
+        <View style={styles.askForCardSubcontainer}>
+          <Text style={styles.gameUpdateText}>
+            It's your turn! Choose some cards to play!
+          </Text>
+        </View>
+      </View>
+    );
   } else if (gameState.turnState === "fishing") {
     return (
       <View style={styles.askForCardContainer}>
