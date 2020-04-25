@@ -1125,7 +1125,10 @@ export async function playCardPres(gameId, name, cards) {
     const playerInd = players.findIndex((player) => player.name === name);
     let cardIndicies = [];
     const burned = isCardBurned(cards, docData.currentCard);
-    let nextTurn = burned ? docData.turn : getNextPlayerCE(docData, false);
+    let nextTurn =
+      burned && players[playerInd].hand.length - cards.length !== 0
+        ? docData.turn
+        : getNextPlayerCE(docData, false);
 
     for (let i = 0; i < cards.length; i++) {
       cardIndicies.push(

@@ -89,7 +89,9 @@ export function cardComparison(cardOne, cardTwo) {
 export function isValidPlay(cards, currentCard) {
   let errorMessage = null;
 
-  if (currentCard !== null) {
+  if (cards.length === 0) {
+    errorMessage = "You must select some cards to play";
+  } else if (currentCard !== null) {
     if (cards[0].rank === "2") {
       if (currentCard.length === 1 && cards.length > 1) {
         errorMessage = "You only need to play 1 two to burn this card";

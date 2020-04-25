@@ -60,7 +60,8 @@ const PresidentGameplayPage = ({ route, navigation }) => {
             });
           } else if (
             newGameState.players.filter((player) => player.hand.length > 0)
-              .length === 1
+              .length === 1 &&
+            !newGameState.burning
           ) {
             endGame(gameId);
           } else if (

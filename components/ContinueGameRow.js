@@ -22,6 +22,7 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
   const finishedGameScreenMapping = {
     goFish: "GameEnd Go Fish",
     crazyEights: "GameEnd Crazy Eights",
+    president: "GameEnd President",
   };
 
   const getGameStatus = () => {

@@ -149,6 +149,133 @@ const PresidentPlayedCard = ({
             opacity.setValue(0);
             scale.setValue(0.2);
           });
+        } else if (numTurnsAway === 1 && numPlayers >= 4) {
+          yOffset.setValue(yOffsets.bottom);
+          xOffset.setValue(xOffsets.left);
+
+          Animated.parallel([
+            Animated.timing(yOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            setPreviousCard(playedCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
+          });
+        } else if (numTurnsAway === numPlayers - 1 && numPlayers >= 4) {
+          yOffset.setValue(yOffsets.bottom);
+          xOffset.setValue(xOffsets.right);
+
+          Animated.parallel([
+            Animated.timing(yOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            setPreviousCard(playedCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
+          });
+        } else if (
+          (numPlayers === 3 && numTurnsAway === 1) ||
+          ((numPlayers === 5 || numPlayers === 6) && numTurnsAway === 2)
+        ) {
+          yOffset.setValue(yOffsets.center);
+          xOffset.setValue(xOffsets.left);
+
+          Animated.parallel([
+            Animated.timing(yOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            setPreviousCard(playedCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
+          });
+        } else if (
+          (numPlayers === 3 && numTurnsAway === 2) ||
+          ((numPlayers === 5 || numPlayers === 6) &&
+            numTurnsAway === numPlayers - 2)
+        ) {
+          yOffset.setValue(yOffsets.center);
+          xOffset.setValue(xOffsets.right);
+
+          Animated.parallel([
+            Animated.timing(yOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scale, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xOffset, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            setPreviousCard(playedCard);
+            opacity.setValue(0);
+            scale.setValue(0.2);
+          });
         } else {
           setPreviousCard(playedCard);
         }
