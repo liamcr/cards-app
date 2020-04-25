@@ -56,6 +56,7 @@ const GameEnd = ({ route, navigation }) => {
       .onSnapshot((doc) => {
         if (doc.exists) {
           let data = doc.data();
+          setGameState(data);
 
           if (!data.finished && !data.started) {
             navigation.replace("Waiting Room", {
@@ -74,12 +75,6 @@ const GameEnd = ({ route, navigation }) => {
 
     return () => unsubscribe();
   }, []);
-
-  if (gameState === null) {
-    getGame(gameId).then((game) => {
-      setGameState(game);
-    });
-  }
 
   return (
     <View style={styles.pageContainer}>

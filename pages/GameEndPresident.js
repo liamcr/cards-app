@@ -12,7 +12,7 @@ import { getGame, cancelGame, resetGame } from "../utils/firebaseFunctions";
 import firestore from "@react-native-firebase/firestore";
 import theme from "../styles/theme.style";
 
-const GameEndCrazyEights = ({ route, navigation }) => {
+const GameEndPresident = ({ route, navigation }) => {
   const { gameId, name } = route.params;
 
   const [gameState, setGameState] = useState(null);
@@ -162,4 +162,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GameEndCrazyEights;
+export default GameEndPresident;

@@ -15,6 +15,7 @@ import CrazyEightsGameplayPage from "./pages/CrazyEightsGameplayPage";
 import GameEndCrazyEights from "./pages/GameEndCrazyEights";
 import CrazyEightsRules from "./pages/CrazyEightsRules";
 import PresidentGameplayPage from "./pages/PresidentGameplayPage";
+import GameEndPresident from "./pages/GameEndPresident";
 
 const Stack = createStackNavigator();
 
@@ -43,6 +44,7 @@ const App = () => {
           name="GameEnd Crazy Eights"
           component={GameEndCrazyEights}
         />
+        <Stack.Screen name="GameEnd President" component={GameEndPresident} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -393,7 +393,7 @@ const CrazyEightsGameplayPage = ({ route, navigation }) => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalView}>
-              <Text style={styles.modalTitle}>{`Congratulations! ${
+              <Text style={styles.modalTitle}>{`Congrats! ${
                 rankingToEmoji[getPlacementText()]
               }`}</Text>
               <Text

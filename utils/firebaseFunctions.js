@@ -212,6 +212,23 @@ export async function resetGame(gameId) {
         toPickUp: 0,
         mostRecentMove: [],
       });
+    } else if (data.game === "president") {
+      const resetPlayers = data.players.map((player) => {
+        return { name: player.name, hand: [], rank: "neutral" };
+      });
+
+      document.update({
+        finished: false,
+        started: false,
+        players: resetPlayers,
+        pond: pondTemplate,
+        gameUpdate: "Game Starting...",
+        turn: 0,
+        currentCard: null,
+        playerRankings: [],
+        mostRecentMove: [],
+        burning: false,
+      });
     }
   });
 }
@@ -1122,6 +1139,18 @@ export async function playCardPres(gameId, name, cards) {
       players[playerInd].hand.splice(cardIndicies[i], 1);
     }
 
+    let playerRankingsCopy = [...docData.playerRankings];
+
+    if (players[playerInd].hand.length === 0) {
+      playerRankingsCopy.push(name);
+
+      if (players.filter((player) => player.hand.length > 0).length === 1) {
+        playerRankingsCopy.push(
+          players.find((player) => player.hand.length > 0).name
+        );
+      }
+    }
+
     await document.update({
       currentCard: cards,
       mostRecentMove: [name, "playCard"],
@@ -1130,6 +1159,7 @@ export async function playCardPres(gameId, name, cards) {
       gameUpdate: `It's ${docData.players[nextTurn].name}'s turn`,
       burning: burned,
       lastPlayer: docData.turn,
+      playerRankings: playerRankingsCopy,
     });
   });
 

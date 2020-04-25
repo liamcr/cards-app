@@ -1,5 +1,4 @@
 import PresCardValues from "./presidentCardValues.json";
-import PresidentPrompt from "../components/PresidentPrompt";
 
 /**
  * Shuffles an array's values and returns the modified array
@@ -130,7 +129,11 @@ export function isValidPlay(cards, currentCard) {
  */
 export function isCardBurned(playedCard, currentCard) {
   if (currentCard === null) {
-    return false;
+    if (playedCard[0].rank === "2") {
+      return true;
+    } else {
+      return false;
+    }
   } else if (playedCard[0].rank === "2") {
     if (currentCard.length === 1 && playedCard.length === 1) {
       return true;
