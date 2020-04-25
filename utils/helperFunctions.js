@@ -1,4 +1,5 @@
 import PresCardValues from "./presidentCardValues.json";
+import PresidentPrompt from "../components/PresidentPrompt";
 
 /**
  * Shuffles an array's values and returns the modified array
@@ -147,5 +148,22 @@ export function isCardBurned(playedCard, currentCard) {
     } else {
       return false;
     }
+  }
+}
+
+/**
+ * Determines whether or not everyone in the game has passed on a played
+ * card
+ *
+ * @param {number} oldTurn The turn of the last player who passed
+ * @param {number} newTurn The turn of the next player
+ * @param {number} lastPlayerToPlay The turn number of the last player to make a move
+ * @returns {boolean} True if everyone has passed, false if not
+ */
+export function hasEveryonePassed(oldTurn, newTurn, lastPlayerToPlay) {
+  if (newTurn > oldTurn) {
+    return oldTurn < lastPlayerToPlay && newTurn >= lastPlayerToPlay;
+  } else {
+    return oldTurn < lastPlayerToPlay || newTurn >= lastPlayerToPlay;
   }
 }

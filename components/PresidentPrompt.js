@@ -29,8 +29,19 @@ const PresidentPrompt = ({ gameState, name, gameId }) => {
         <Text style={styles.gameUpdateText}>
           It's your turn! Choose some cards to play!
         </Text>
-        <TouchableOpacity onPress={onPressPass} disabled={passPressed}>
-          <View style={styles.passButton}>
+        <TouchableOpacity
+          onPress={onPressPass}
+          disabled={passPressed || gameState.currentCard === null}
+        >
+          <View
+            style={{
+              ...styles.passButton,
+              backgroundColor:
+                passPressed || gameState.currentCard === null
+                  ? theme.DISABLED_COLOUR
+                  : theme.PRIMARY_COLOUR,
+            }}
+          >
             <Text style={styles.passButtonText}>Pass</Text>
           </View>
         </TouchableOpacity>
@@ -52,7 +63,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   passButton: {
-    backgroundColor: theme.PRIMARY_COLOUR,
     paddingTop: 8,
     paddingBottom: 8,
     paddingLeft: 16,

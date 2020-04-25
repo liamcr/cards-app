@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { playCardPres } from "../utils/firebaseFunctions";
@@ -67,29 +68,34 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
   return (
     <GestureRecognizer onSwipeUp={onSwipeUp}>
       <Text style={styles.headerText}>Your hand:</Text>
-      <FlatList
-        horizontal
-        data={playerObj.hand}
-        renderItem={({ item, index }) => (
-          <TouchableOpacity
-            disabled={
-              gameState.players[gameState.turn].name !== playerObj.name ||
-              gameState.burning
-            }
-            onPress={() => onPress(index)}
-          >
-            <Card rank={item.rank} suit={item.suit} />
-            <CardOverlay selected={selected[index]} />
-          </TouchableOpacity>
-        )}
-        keyExtractor={(item, index) => index.toString()}
-      />
+      <View style={styles.userHandContainer}>
+        <FlatList
+          horizontal
+          data={playerObj.hand}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              disabled={
+                gameState.players[gameState.turn].name !== playerObj.name ||
+                gameState.burning
+              }
+              onPress={() => onPress(index)}
+            >
+              <Card rank={item.rank} suit={item.suit} />
+              <CardOverlay selected={selected[index]} />
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item, index) => index.toString()}
+        />
+      </View>
     </GestureRecognizer>
   );
 };
 
 const styles = StyleSheet.create({
   headerText: { fontSize: 20, marginLeft: 8 },
+  userHandContainer: {
+    height: 144,
+  },
 });
 
 export default PresidentHand;

@@ -10,6 +10,7 @@ import {
   getNextPlayerGoFish,
   cardComparison,
   isCardBurned,
+  hasEveryonePassed,
 } from "./helperFunctions";
 
 /**********************************
@@ -447,6 +448,7 @@ export async function createGame(creatorName, gameType) {
       playerRankings: [],
       mostRecentMove: [],
       burning: false,
+      lastPlayer: 0,
     };
   }
 
@@ -679,6 +681,7 @@ export async function startGame(gameId) {
           turn: startingPlayer,
           gameUpdate: `It's ${players[startingPlayer].name}'s turn`,
           currentCard: null,
+          lastPlayer: startingPlayer,
         })
         .then(() => {
           console.log("started");
@@ -1126,6 +1129,7 @@ export async function playCardPres(gameId, name, cards) {
       turn: nextTurn,
       gameUpdate: `It's ${docData.players[nextTurn].name}'s turn`,
       burning: burned,
+      lastPlayer: docData.turn,
     });
   });
 
@@ -1172,10 +1176,18 @@ export async function passTurn(gameId) {
 
     let nextTurn = getNextPlayerCE(docData, false);
 
+    let everyonePassed = hasEveryonePassed(
+      docData.turn,
+      nextTurn,
+      docData.lastPlayer
+    );
+
     await document.update({
       turn: nextTurn,
       gameUpdate: `It's ${docData.players[nextTurn].name}'s turn`,
-      mostRecentMove: [],
+      mostRecentMove: everyonePassed ? ["", "burnCard"] : [],
+      currentCard: everyonePassed ? null : docData.currentCard,
+      lastPlayer: everyonePassed ? nextTurn : docData.lastPlayer,
     });
   });
 }
