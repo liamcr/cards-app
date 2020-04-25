@@ -1091,7 +1091,7 @@ export async function takeCardFromHandCE(gameId, name, rank, suit) {
  * @param {string} name Name of the user playing
  * @param {Array} cards Cards the user wants to play
  */
-export async function PlayCardPres(gameId, name, cards) {
+export async function playCardPres(gameId, name, cards) {
   const document = firestore()
     .collection("liveGames")
     .doc(gameId);
@@ -1154,5 +1154,28 @@ export async function burnCard(gameId) {
         mostRecentMove: ["", "burnCard"],
       });
     }
+  });
+}
+
+/**
+ * Passes the current turn to the next available player.
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ */
+export async function passTurn(gameId) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    let docData = doc.data();
+
+    let nextTurn = getNextPlayerCE(docData, false);
+
+    await document.update({
+      turn: nextTurn,
+      gameUpdate: `It's ${docData.players[nextTurn].name}'s turn`,
+      mostRecentMove: [],
+    });
   });
 }

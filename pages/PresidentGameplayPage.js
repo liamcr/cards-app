@@ -6,6 +6,7 @@ import LoadingOverlay from "../components/LoadingOverlay";
 import PresidentPlayedCard from "../components/PresidentPlayedCard";
 import OpponentStateContainer from "../components/OpponentStateContainer";
 import UserPrompt from "../components/UserPrompt";
+import PresidentPrompt from "../components/PresidentPrompt";
 
 const PresidentGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -52,7 +53,7 @@ const PresidentGameplayPage = ({ route, navigation }) => {
           />
         </View>
         <View style={styles.userContainer}>
-          <UserPrompt gameState={gameState} name={name} />
+          <PresidentPrompt gameState={gameState} name={name} gameId={gameId} />
           <PresidentHand
             gameId={gameId}
             playerObj={gameState.players.find((player) => player.name === name)}

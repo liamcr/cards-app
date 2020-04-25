@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import GestureRecognizer from "react-native-swipe-gestures";
-import { PlayCardPres } from "../utils/firebaseFunctions";
+import { playCardPres } from "../utils/firebaseFunctions";
 import { isValidPlay } from "../utils/helperFunctions";
 import Card from "./Card";
 import CardOverlay from "./CardOverlay";
@@ -34,7 +34,7 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
       );
 
       // Submit cards to firebase
-      PlayCardPres(
+      playCardPres(
         gameId,
         playerObj.name,
         playerObj.hand.filter((card, index) => selected[index])
