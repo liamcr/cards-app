@@ -11,6 +11,7 @@ import {
   cardComparison,
   isCardBurned,
   hasEveryonePassed,
+  getPlayerRankPres,
 } from "./helperFunctions";
 
 /**********************************
@@ -214,7 +215,11 @@ export async function resetGame(gameId) {
       });
     } else if (data.game === "president") {
       const resetPlayers = data.players.map((player) => {
-        return { name: player.name, hand: [], rank: "neutral" };
+        return {
+          name: player.name,
+          hand: [],
+          rank: player.rank,
+        };
       });
 
       document.update({
@@ -1221,6 +1226,35 @@ export async function passTurn(gameId) {
       mostRecentMove: everyonePassed ? ["", "burnCard"] : [],
       currentCard: everyonePassed ? null : docData.currentCard,
       lastPlayer: everyonePassed ? nextTurn : docData.lastPlayer,
+    });
+  });
+}
+
+/**
+ * Sets the game to finished in firebase, and assigns ranks to all players
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ */
+export async function endGamePres(gameId) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    const docData = doc.data();
+
+    let playersWithRankings = docData.players.map((player) => {
+      return {
+        name: player.name,
+        hand: [],
+        rank: getPlayerRankPres(player.name, docData.playerRankings),
+      };
+    });
+
+    await document.update({
+      players: playersWithRankings,
+      finished: true,
+      mostRecentMove: [],
     });
   });
 }

@@ -172,3 +172,30 @@ export function hasEveryonePassed(oldTurn, newTurn, lastPlayerToPlay) {
     return oldTurn < lastPlayerToPlay || newTurn >= lastPlayerToPlay;
   }
 }
+
+/**
+ * Gives the rank of the player based on the leaderboard from last game.
+ * Results include: "president", "vice-president", "neutral", "vice-bum", and "bum"
+ *
+ * @param {string} name The name of the player we want to get the rank of
+ * @param {Array} playerRankings The leaderboard of the players from the last game
+ * @returns {string} The rank of the player for the next round
+ */
+export function getPlayerRankPres(name, playerRankings) {
+  const numPlayers = playerRankings.length;
+  const playerIndex = playerRankings.findIndex(
+    (playerName) => playerName === name
+  );
+
+  if (playerIndex === 0) {
+    return "president";
+  } else if (playerIndex === numPlayers - 1) {
+    return "bum";
+  } else if (numPlayers >= 4 && playerIndex === 1) {
+    return "vice-president";
+  } else if (numPlayers >= 4 && playerIndex === numPlayers - 2) {
+    return "vice-bum";
+  } else {
+    return "neutral";
+  }
+}

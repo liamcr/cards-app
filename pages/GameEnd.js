@@ -154,6 +154,9 @@ const styles = StyleSheet.create({
   playerRank: {
     fontSize: 20,
     marginRight: 8,
+    color: "#888888",
+    width: 25,
+    textAlign: "center",
   },
   playerName: {
     fontSize: 20,

@@ -6,7 +6,7 @@ import LoadingOverlay from "../components/LoadingOverlay";
 import PresidentPlayedCard from "../components/PresidentPlayedCard";
 import OpponentStateContainer from "../components/OpponentStateContainer";
 import PresidentPrompt from "../components/PresidentPrompt";
-import { endGame } from "../utils/firebaseFunctions";
+import { endGamePres } from "../utils/firebaseFunctions";
 import theme from "../styles/theme.style";
 
 const PresidentGameplayPage = ({ route, navigation }) => {
@@ -63,7 +63,7 @@ const PresidentGameplayPage = ({ route, navigation }) => {
               .length === 1 &&
             !newGameState.burning
           ) {
-            endGame(gameId);
+            endGamePres(gameId);
           } else if (
             newGameState.mostRecentMove.length > 0 &&
             newGameState.mostRecentMove[0] === name &&
