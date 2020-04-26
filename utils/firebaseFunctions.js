@@ -233,6 +233,8 @@ export async function resetGame(gameId) {
         playerRankings: [],
         mostRecentMove: [],
         burning: false,
+        presPassedCards: false,
+        vicePassedCards: resetPlayers.length > 3 ? false : true,
       });
     }
   });
@@ -471,6 +473,8 @@ export async function createGame(creatorName, gameType) {
       mostRecentMove: [],
       burning: false,
       lastPlayer: 0,
+      presPassedCards: true,
+      vicePassedCards: true,
     };
   }
 
@@ -656,12 +660,16 @@ export async function startGame(gameId) {
     }
 
     if (data.game === "president") {
-      startingPlayer = players.findIndex(
-        (player) =>
-          player.hand.filter(
-            (card) => card.rank === "3" && card.suit === "diamonds"
-          ).length > 0
-      );
+      if (!data.presPassedCards) {
+        startingPlayer = players.findIndex((player) => player.rank === "bum");
+      } else {
+        startingPlayer = players.findIndex(
+          (player) =>
+            player.hand.filter(
+              (card) => card.rank === "3" && card.suit === "diamonds"
+            ).length > 0
+        );
+      }
 
       for (let i = 0; i < players.length; i++) {
         players[i].hand = players[i].hand.sort(cardComparison);
@@ -1255,6 +1263,64 @@ export async function endGamePres(gameId) {
       players: playersWithRankings,
       finished: true,
       mostRecentMove: [],
+    });
+  });
+}
+
+export async function swapCards(gameId, name, cards) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  await document.get().then(async (doc) => {
+    const docData = doc.data();
+
+    let playersCopy = [...docData.players];
+
+    let indOfBum;
+
+    if (cards.length === 2) {
+      indOfBum = playersCopy.findIndex((player) => player.rank === "bum");
+    } else {
+      indOfBum = playersCopy.findIndex((player) => player.rank === "vice-bum");
+    }
+
+    let bumsBestCards = playersCopy[indOfBum].hand.splice(
+      playersCopy[indOfBum].hand.length - cards.length
+    );
+
+    let indOfPres = playersCopy.findIndex((player) => player.name === name);
+
+    playersCopy[indOfPres].hand.push(...bumsBestCards);
+
+    playersCopy[indOfBum].hand.push(...cards);
+
+    let cardIndicies = [];
+
+    for (let i = 0; i < cards.length; i++) {
+      cardIndicies.push(
+        playersCopy[indOfPres].hand.findIndex(
+          (card) => card.rank === cards[i].rank && card.suit === cards[i].suit
+        )
+      );
+    }
+
+    for (let i = cards.length - 1; i >= 0; i--) {
+      playersCopy[indOfPres].hand.splice(cardIndicies[i], 1);
+    }
+
+    playersCopy[indOfBum].hand = playersCopy[indOfBum].hand.sort(
+      cardComparison
+    );
+
+    playersCopy[indOfPres].hand = playersCopy[indOfPres].hand.sort(
+      cardComparison
+    );
+
+    document.update({
+      players: playersCopy,
+      presPassedCards: docData.presPassedCards || cards.length === 2,
+      vicePassedCards: docData.vicePassedCards || cards.length === 1,
     });
   });
 }
