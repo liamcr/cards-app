@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Modal, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import PresidentHand from "../components/PresidentHand";
 import firestore from "@react-native-firebase/firestore";
 import LoadingOverlay from "../components/LoadingOverlay";
 import PresidentPlayedCard from "../components/PresidentPlayedCard";
 import OpponentStateContainer from "../components/OpponentStateContainer";
 import PresidentPrompt from "../components/PresidentPrompt";
-import { endGamePres } from "../utils/firebaseFunctions";
+import { endGamePres, hasPlayedPres } from "../utils/firebaseFunctions";
 import theme from "../styles/theme.style";
+import InfoIcon from "../assets/infoIcon.png";
 
 const PresidentGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -16,6 +25,12 @@ const PresidentGameplayPage = ({ route, navigation }) => {
   const [finishedGameModalVisible, setFinishedGameModalVisible] = useState(
     false
   );
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
+
+  // waitingForFirebase is a boolean value that is true if there
+  // is an asynchronous firebase function currently running. This
+  // is used to show the user some loading feedback.
+  const [waitingForFirebase, setWaitingForFirebase] = useState(false);
 
   const rankingToEmoji = {
     "1st": "🥇",
@@ -43,6 +58,12 @@ const PresidentGameplayPage = ({ route, navigation }) => {
   };
 
   useEffect(() => {
+    hasPlayedPres().then((hasPlayed) => {
+      if (!hasPlayed) {
+        setInfoModalVisible(true);
+      }
+    });
+
     const unsubscribe = firestore()
       .collection("liveGames")
       .doc(gameId)
@@ -112,8 +133,22 @@ const PresidentGameplayPage = ({ route, navigation }) => {
             gameId={gameId}
             playerObj={gameState.players.find((player) => player.name === name)}
             gameState={gameState}
+            setWaitingForFirebase={setWaitingForFirebase}
           />
         </View>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate("PresidentRules");
+          }}
+          style={{ position: "absolute", margin: 5, right: 0 }}
+        >
+          <Image source={InfoIcon} style={{ height: 32, width: 32 }} />
+        </TouchableOpacity>
+        <ActivityIndicator
+          style={{ position: "absolute", margin: 5 }}
+          color={theme.PRIMARY_COLOUR}
+          animating={waitingForFirebase}
+        />
         <Modal
           visible={finishedGameModalVisible}
           animationType="slide"
@@ -130,6 +165,29 @@ const PresidentGameplayPage = ({ route, navigation }) => {
               <TouchableOpacity
                 onPress={() => {
                   setFinishedGameModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalClose}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          visible={infoModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitle}>Hey, Newbie!</Text>
+              <Text style={styles.modalBody}>
+                Looks like this is your first time playing president on the app.
+                Make sure you hit the info icon in the top-right corner to
+                understand the controls and how to play.
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setInfoModalVisible(false);
                 }}
               >
                 <Text style={styles.modalClose}>Close</Text>

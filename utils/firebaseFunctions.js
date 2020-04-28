@@ -152,6 +152,39 @@ export async function removeGameLocally(gameId) {
   await AsyncStorage.setItem("cardGamesActive", JSON.stringify(localGamesJSON));
 }
 
+/**
+ * Determines whether or not the user has played a game of president on the app.
+ * If they haven't, the user's local storage is updated to reflect that they now
+ * have.
+ *
+ * @returns {boolean} True if the user has previously played president, false if not.
+ */
+export async function hasPlayedPres() {
+  let localStoreVal = null;
+
+  await AsyncStorage.getItem("playedPres", (err, res) => {
+    if (err) {
+      console.error(err.message);
+    }
+
+    localStoreVal = res;
+  });
+
+  if (localStoreVal !== null) {
+    return true;
+  } else {
+    await AsyncStorage.setItem("playedPres", "y")
+      .then(() => {
+        console.log("First time playing president!");
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
+
+    return false;
+  }
+}
+
 /**********************************
  * General Firebase
  **********************************/

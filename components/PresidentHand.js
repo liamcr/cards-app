@@ -13,7 +13,12 @@ import { isValidPlay } from "../utils/helperFunctions";
 import Card from "./Card";
 import CardOverlay from "./CardOverlay";
 
-const PresidentHand = ({ gameId, playerObj, gameState }) => {
+const PresidentHand = ({
+  gameId,
+  playerObj,
+  gameState,
+  setWaitingForFirebase,
+}) => {
   const [selected, setSelected] = useState(playerObj.hand.map(() => false));
   const [sentCards, setSentCards] = useState(false);
 
@@ -26,6 +31,8 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
       if (errorMessage !== null) {
         ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
       } else {
+        setWaitingForFirebase(true);
+
         setSelected((oldSelected) =>
           oldSelected
             .slice(
@@ -41,9 +48,13 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
           gameId,
           playerObj.name,
           playerObj.hand.filter((card, index) => selected[index])
-        ).catch((error) => {
-          console.error(error.message);
-        });
+        )
+          .then(() => {
+            setWaitingForFirebase(false);
+          })
+          .catch((error) => {
+            console.error(error.message);
+          });
       }
     } else if (
       !gameState.presPassedCards &&
@@ -58,6 +69,7 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
         ToastAndroid.show("You have to pass two cards", ToastAndroid.SHORT);
         setSentCards(false);
       } else {
+        setWaitingForFirebase(true);
         setSelected((oldSelected) =>
           oldSelected.slice(0, oldSelected.length).map(() => false)
         );
@@ -68,6 +80,7 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
           playerObj.name,
           playerObj.hand.filter((card, index) => selected[index])
         ).then(() => {
+          setWaitingForFirebase(false);
           setSentCards(false);
         });
       }
@@ -82,6 +95,7 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
         ToastAndroid.show("You have to pass one card", ToastAndroid.SHORT);
         setSentCards(false);
       } else {
+        setWaitingForFirebase(true);
         setSelected((oldSelected) =>
           oldSelected.slice(0, oldSelected.length).map(() => false)
         );
@@ -92,6 +106,7 @@ const PresidentHand = ({ gameId, playerObj, gameState }) => {
           playerObj.name,
           playerObj.hand.filter((card, index) => selected[index])
         ).then(() => {
+          setWaitingForFirebase(false);
           setSentCards(false);
         });
       }
