@@ -274,7 +274,10 @@ const PresidentGameplayPage = ({ route, navigation }) => {
     );
   } else {
     return (
-      <GestureRecognizer onSwipeUp={onSwipeUp}>
+      <GestureRecognizer
+        onSwipeUp={onSwipeUp}
+        style={{ backgroundColor: "hsla(0, 0%, 0%, 0)" }}
+      >
         <View style={styles.gameplayContainer}>
           <View style={styles.opponentContainer}>
             <PresidentPlayedCard
