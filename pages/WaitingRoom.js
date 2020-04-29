@@ -16,6 +16,7 @@ import {
   startGame,
 } from "../utils/firebaseFunctions";
 import firestore from "@react-native-firebase/firestore";
+import RoundedButton from "../components/RoundedButton";
 
 const WaitingRoom = ({ route, navigation }) => {
   const { isCreator, gameId, name } = route.params;
@@ -175,27 +176,16 @@ const WaitingRoom = ({ route, navigation }) => {
       </View>
       <View style={styles.buttonContainer}>
         {isCreator && (
-          <Button
-            color={theme.PRIMARY_COLOUR}
+          <RoundedButton
             title={"Start Game"}
             disabled={players.length < 2}
             onPress={onStart}
           />
         )}
         {isCreator && (
-          <Button
-            color={theme.PRIMARY_COLOUR}
-            title={"Cancel Game"}
-            onPress={onCancel}
-          />
+          <RoundedButton title={"Cancel Game"} onPress={onCancel} />
         )}
-        {!isCreator && (
-          <Button
-            color={theme.PRIMARY_COLOUR}
-            title={"Leave Game"}
-            onPress={onLeave}
-          />
-        )}
+        {!isCreator && <RoundedButton title={"Leave Game"} onPress={onLeave} />}
       </View>
     </View>
   );

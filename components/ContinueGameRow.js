@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import ProfileIcon from "../assets/profileIcon.png";
-import { getGame, removeGameLocally } from "../utils/firebaseFunctions";
+import firestore from "@react-native-firebase/firestore";
 import GoIcon from "../assets/go.png";
 
 const ContinueGameRow = ({ gameId, playerName, navigation }) => {
@@ -61,14 +61,16 @@ const ContinueGameRow = ({ gameId, playerName, navigation }) => {
   };
 
   useEffect(() => {
-    getGame(gameId).then((data) => {
-      if (data === null) {
-        removeGameLocally(gameId).catch((err) => {
-          console.log(err.message);
-        });
-      }
-      setGameData(data);
-    });
+    const unsubscribe = firestore()
+      .collection("liveGames")
+      .doc(gameId)
+      .onSnapshot((doc) => {
+        if (doc.exists) {
+          setGameData(doc.data());
+        }
+      });
+
+    return () => unsubscribe();
   }, []);
 
   return (

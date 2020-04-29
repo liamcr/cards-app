@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
 import { Picker } from "@react-native-community/picker";
-import theme from "../styles/theme.style";
+import RoundedButton from "./RoundedButton";
 
 const UserPrompt = ({
   gameState,
@@ -82,29 +82,32 @@ const UserPrompt = ({
   } else if (gameState.turnState === "choosingCard") {
     return (
       <View style={styles.askForCardContainer}>
-        <View style={styles.askForCardSubcontainer}>
-          <Text style={styles.gameUpdateText}>Ask someone for a card:</Text>
-          <Picker
-            selectedValue={
-              gameState.players.filter((player) => player.name !== name)[toAsk]
-                .name
-            }
-            onValueChange={onValChange}
-            mode="dropdown"
-            style={{ width: "70%" }}
-          >
-            {gameState.players
-              .filter((player) => player.name !== name)
-              .map((player, index) => (
-                <Picker.Item
-                  key={index}
-                  label={player.name}
-                  value={player.name}
-                />
-              ))}
-          </Picker>
+        <View style={styles.askForCardPromptSubcontainer}>
+          <View style={styles.askPickerContainer}>
+            <Text style={styles.gameUpdateText}>Ask someone for a card:</Text>
+            <Picker
+              selectedValue={
+                gameState.players.filter((player) => player.name !== name)[
+                  toAsk
+                ].name
+              }
+              onValueChange={onValChange}
+              mode="dropdown"
+              style={{ width: "70%" }}
+            >
+              {gameState.players
+                .filter((player) => player.name !== name)
+                .map((player, index) => (
+                  <Picker.Item
+                    key={index}
+                    label={player.name}
+                    value={player.name}
+                  />
+                ))}
+            </Picker>
+          </View>
           <View style={styles.askButtonContainer}>
-            <Button color={theme.PRIMARY_COLOUR} title="Ask!" onPress={onAsk} />
+            <RoundedButton title="Ask!" onPress={onAsk} />
           </View>
         </View>
       </View>
@@ -129,9 +132,18 @@ const styles = StyleSheet.create({
     display: "flex",
     alignItems: "center",
   },
-  askButtonContainer: {
-    width: "50%",
+  askForCardPromptSubcontainer: {
+    display: "flex",
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
   },
+  askPickerContainer: {
+    display: "flex",
+    alignItems: "center",
+  },
+  askButtonContainer: {},
 });
 
 export default UserPrompt;

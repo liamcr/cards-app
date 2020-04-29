@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  ToastAndroid,
 } from "react-native";
 import PresidentHand from "../components/PresidentHand";
 import firestore from "@react-native-firebase/firestore";
@@ -17,6 +18,9 @@ import PresidentPrompt from "../components/PresidentPrompt";
 import { endGamePres, hasPlayedPres } from "../utils/firebaseFunctions";
 import theme from "../styles/theme.style";
 import InfoIcon from "../assets/infoIcon.png";
+import { playCardPres, swapCards } from "../utils/firebaseFunctions";
+import { isValidPlay } from "../utils/helperFunctions";
+import GestureRecognizer from "react-native-swipe-gestures";
 
 const PresidentGameplayPage = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -26,11 +30,15 @@ const PresidentGameplayPage = ({ route, navigation }) => {
     false
   );
   const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const [playerObj, setPlayerObj] = useState(null);
 
   // waitingForFirebase is a boolean value that is true if there
   // is an asynchronous firebase function currently running. This
   // is used to show the user some loading feedback.
   const [waitingForFirebase, setWaitingForFirebase] = useState(false);
+
+  const [selected, setSelected] = useState([]);
+  const [sentCards, setSentCards] = useState(false);
 
   const rankingToEmoji = {
     "1st": "🥇",
@@ -57,6 +65,154 @@ const PresidentGameplayPage = ({ route, navigation }) => {
     }
   };
 
+  const onSwipeUp = () => {
+    if (gameState.presPassedCards && gameState.vicePassedCards) {
+      let errorMessage = isValidPlay(
+        playerObj.hand.filter((card, index) => selected[index]),
+        gameState.currentCard
+      );
+      if (errorMessage !== null) {
+        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      } else {
+        setWaitingForFirebase(true);
+
+        setSelected((oldSelected) =>
+          oldSelected
+            .slice(
+              0,
+              oldSelected.length -
+                oldSelected.filter((isSelected) => isSelected).length
+            )
+            .map(() => false)
+        );
+
+        // Submit cards to firebase
+        playCardPres(
+          gameId,
+          playerObj.name,
+          playerObj.hand.filter((card, index) => selected[index])
+        )
+          .then(() => {
+            setWaitingForFirebase(false);
+          })
+          .catch((error) => {
+            console.error(error.message);
+          });
+      }
+    } else if (
+      !gameState.presPassedCards &&
+      playerObj.rank === "president" &&
+      !sentCards
+    ) {
+      setSentCards(true);
+
+      if (
+        selected.reduce((total, current) => total + (current ? 1 : 0)) !== 2
+      ) {
+        ToastAndroid.show("You have to pass two cards", ToastAndroid.SHORT);
+        setSentCards(false);
+      } else {
+        setWaitingForFirebase(true);
+        setSelected((oldSelected) =>
+          oldSelected.slice(0, oldSelected.length).map(() => false)
+        );
+
+        //Swap card logic
+        swapCards(
+          gameId,
+          playerObj.name,
+          playerObj.hand.filter((card, index) => selected[index])
+        ).then(() => {
+          setWaitingForFirebase(false);
+          setSentCards(false);
+        });
+      }
+    } else if (
+      !gameState.vicePassedCards &&
+      playerObj.rank === "vice-president" &&
+      !sentCards
+    ) {
+      if (
+        selected.reduce((total, current) => total + (current ? 1 : 0)) !== 1
+      ) {
+        ToastAndroid.show("You have to pass one card", ToastAndroid.SHORT);
+        setSentCards(false);
+      } else {
+        setWaitingForFirebase(true);
+        setSelected((oldSelected) =>
+          oldSelected.slice(0, oldSelected.length).map(() => false)
+        );
+
+        //Swap card logic
+        swapCards(
+          gameId,
+          playerObj.name,
+          playerObj.hand.filter((card, index) => selected[index])
+        ).then(() => {
+          setWaitingForFirebase(false);
+          setSentCards(false);
+        });
+      }
+    }
+  };
+
+  const onPress = (index) => {
+    if (gameState.presPassedCards && gameState.vicePassedCards) {
+      const indOfFirstSelected = selected.findIndex((isSelected) => isSelected);
+
+      if (
+        indOfFirstSelected === -1 ||
+        playerObj.hand[index].rank === playerObj.hand[indOfFirstSelected].rank
+      ) {
+        let selectedCopy = [...selected];
+
+        selectedCopy[index] = !selectedCopy[index];
+
+        setSelected(selectedCopy);
+      } else {
+        ToastAndroid.show(
+          "You can only select multiple cards of the same rank",
+          ToastAndroid.SHORT
+        );
+      }
+    } else {
+      if (playerObj.rank === "president") {
+        if (
+          selected[index] ||
+          selected.reduce((total, current) => total + (current ? 1 : 0)) < 2
+        ) {
+          let selectedCopy = [...selected];
+
+          selectedCopy[index] = !selectedCopy[index];
+
+          setSelected(selectedCopy);
+        } else {
+          ToastAndroid.show(
+            "You can only select two cards to send over",
+            ToastAndroid.SHORT
+          );
+        }
+      }
+      if (playerObj.rank === "vice-president") {
+        if (
+          selected[index] ||
+          selected.reduce((total, current) => total + (current ? 1 : 0)) < 1
+        ) {
+          let selectedCopy = [...selected];
+
+          selectedCopy[index] = !selectedCopy[index];
+
+          setSelected(selectedCopy);
+        } else {
+          ToastAndroid.show(
+            "You can only select one card to send over",
+            ToastAndroid.SHORT
+          );
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     hasPlayedPres().then((hasPlayed) => {
       if (!hasPlayed) {
@@ -72,6 +228,14 @@ const PresidentGameplayPage = ({ route, navigation }) => {
           const newGameState = doc.data();
 
           setGameState(newGameState);
+          setSelected(
+            newGameState.players
+              .find((player) => player.name === name)
+              .hand.map(() => false)
+          );
+          setPlayerObj(
+            newGameState.players.find((player) => player.name === name)
+          );
 
           if (newGameState.finished) {
             // Navigate to game end screen
@@ -110,92 +274,101 @@ const PresidentGameplayPage = ({ route, navigation }) => {
     );
   } else {
     return (
-      <View style={styles.gameplayContainer}>
-        <View style={styles.opponentContainer}>
-          <PresidentPlayedCard
-            playedCard={gameState.currentCard}
-            mostRecentMove={gameState.mostRecentMove}
-            players={gameState.players}
-            name={name}
-            gameId={gameId}
-          />
-          <OpponentStateContainer
-            userIndex={gameState.players.findIndex(
-              (player) => player.name === name
-            )}
-            playerArr={gameState.players}
-            gameState={gameState}
-          />
-        </View>
-        <View style={styles.userContainer}>
-          <PresidentPrompt gameState={gameState} name={name} gameId={gameId} />
-          <PresidentHand
-            gameId={gameId}
-            playerObj={gameState.players.find((player) => player.name === name)}
-            gameState={gameState}
-            setWaitingForFirebase={setWaitingForFirebase}
-          />
-        </View>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate("PresidentRules");
-          }}
-          style={{ position: "absolute", margin: 5, right: 0 }}
-        >
-          <Image source={InfoIcon} style={{ height: 32, width: 32 }} />
-        </TouchableOpacity>
-        <ActivityIndicator
-          style={{ position: "absolute", margin: 5 }}
-          color={theme.PRIMARY_COLOUR}
-          animating={waitingForFirebase}
-        />
-        <Modal
-          visible={finishedGameModalVisible}
-          animationType="slide"
-          transparent={true}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalTitle}>{`Congrats! ${
-                rankingToEmoji[getPlacementText()]
-              }`}</Text>
-              <Text
-                style={styles.modalBody}
-              >{`You finished ${getPlacementText()}! Sit tight and wait for the others to finish up!`}</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setFinishedGameModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalClose}>Close</Text>
-              </TouchableOpacity>
-            </View>
+      <GestureRecognizer onSwipeUp={onSwipeUp}>
+        <View style={styles.gameplayContainer}>
+          <View style={styles.opponentContainer}>
+            <PresidentPlayedCard
+              playedCard={gameState.currentCard}
+              mostRecentMove={gameState.mostRecentMove}
+              players={gameState.players}
+              name={name}
+              gameId={gameId}
+            />
+            <OpponentStateContainer
+              userIndex={gameState.players.findIndex(
+                (player) => player.name === name
+              )}
+              playerArr={gameState.players}
+              gameState={gameState}
+            />
           </View>
-        </Modal>
-        <Modal
-          visible={infoModalVisible}
-          animationType="slide"
-          transparent={true}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalTitle}>Hey, Newbie!</Text>
-              <Text style={styles.modalBody}>
-                Looks like this is your first time playing president on the app.
-                Make sure you hit the info icon in the top-right corner to
-                understand the controls and how to play.
-              </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setInfoModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalClose}>Close</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.userContainer}>
+            <PresidentPrompt
+              gameState={gameState}
+              name={name}
+              gameId={gameId}
+            />
+            <PresidentHand
+              playerObj={gameState.players.find(
+                (player) => player.name === name
+              )}
+              gameState={gameState}
+              selected={selected}
+              onSwipeUp={onSwipeUp}
+              onPress={onPress}
+            />
           </View>
-        </Modal>
-      </View>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("PresidentRules");
+            }}
+            style={{ position: "absolute", margin: 5, right: 0 }}
+          >
+            <Image source={InfoIcon} style={{ height: 32, width: 32 }} />
+          </TouchableOpacity>
+          <ActivityIndicator
+            style={{ position: "absolute", margin: 5 }}
+            color={theme.PRIMARY_COLOUR}
+            animating={waitingForFirebase}
+          />
+          <Modal
+            visible={finishedGameModalVisible}
+            animationType="slide"
+            transparent={true}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalTitle}>{`Congrats! ${
+                  rankingToEmoji[getPlacementText()]
+                }`}</Text>
+                <Text
+                  style={styles.modalBody}
+                >{`You finished ${getPlacementText()}! Sit tight and wait for the others to finish up!`}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setFinishedGameModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.modalClose}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+          <Modal
+            visible={infoModalVisible}
+            animationType="slide"
+            transparent={true}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalTitle}>Hey, Newbie!</Text>
+                <Text style={styles.modalBody}>
+                  Looks like this is your first time playing president on the
+                  app. Make sure you hit the info icon in the top-right corner
+                  to understand the controls and how to play.
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setInfoModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.modalClose}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        </View>
+      </GestureRecognizer>
     );
   }
 };

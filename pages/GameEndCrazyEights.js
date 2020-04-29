@@ -11,6 +11,7 @@ import {
 import { getGame, cancelGame, resetGame } from "../utils/firebaseFunctions";
 import firestore from "@react-native-firebase/firestore";
 import theme from "../styles/theme.style";
+import RoundedButton from "../components/RoundedButton";
 
 const GameEndCrazyEights = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -104,16 +105,8 @@ const GameEndCrazyEights = ({ route, navigation }) => {
       {gameState !== null &&
         gameState.players.findIndex((player) => player.name === name) === 0 && (
           <View style={styles.buttonContainer}>
-            <Button
-              color={theme.PRIMARY_COLOUR}
-              title="Play Again"
-              onPress={onPlayAgain}
-            />
-            <Button
-              color={theme.PRIMARY_COLOUR}
-              title="Finish Game"
-              onPress={onExitGame}
-            />
+            <RoundedButton title="Play Again" onPress={onPlayAgain} />
+            <RoundedButton title="Finish Game" onPress={onExitGame} />
           </View>
         )}
     </View>

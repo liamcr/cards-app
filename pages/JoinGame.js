@@ -5,6 +5,7 @@ import { TextInput } from "react-native-gesture-handler";
 import theme from "../styles/theme.style";
 import { createGame, joinGame } from "../utils/firebaseFunctions";
 import LoadingOverlay from "../components/LoadingOverlay";
+import RoundedButton from "../components/RoundedButton";
 
 const JoinGame = ({ route, navigation }) => {
   const { isCreator } = route.params;
@@ -96,9 +97,8 @@ const JoinGame = ({ route, navigation }) => {
         </View>
       </View>
 
-      <Button
+      <RoundedButton
         title="Submit"
-        color={theme.PRIMARY_COLOUR}
         onPress={onSubmit}
         disabled={name.trim() === "" || (!isCreator && roomCode === "")}
       />

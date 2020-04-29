@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import theme from "../styles/theme.style";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { passTurn } from "../utils/firebaseFunctions";
+import RoundedButton from "./RoundedButton";
 
 const PresidentPrompt = ({ gameState, name, gameId }) => {
   const [passPressed, setPassPressed] = useState(false);
@@ -118,22 +119,11 @@ const PresidentPrompt = ({ gameState, name, gameId }) => {
         <Text style={styles.gameUpdateText}>
           It's your turn! Choose some cards to play!
         </Text>
-        <TouchableOpacity
+        <RoundedButton
+          title="Pass"
           onPress={onPressPass}
           disabled={passPressed || gameState.currentCard === null}
-        >
-          <View
-            style={{
-              ...styles.passButton,
-              backgroundColor:
-                passPressed || gameState.currentCard === null
-                  ? theme.DISABLED_COLOUR
-                  : theme.PRIMARY_COLOUR,
-            }}
-          >
-            <Text style={styles.passButtonText}>Pass</Text>
-          </View>
-        </TouchableOpacity>
+        />
       </View>
     );
   }
