@@ -11,14 +11,27 @@ import {
 import { getGame, cancelGame, resetGame } from "../utils/firebaseFunctions";
 import firestore from "@react-native-firebase/firestore";
 import theme from "../styles/theme.style";
+import { getPlayerRankPres } from "../utils/helperFunctions";
 import RoundedButton from "../components/RoundedButton";
 
-const GameEndCrazyEights = ({ route, navigation }) => {
+const GameEndPresident = ({ route, navigation }) => {
   const { gameId, name } = route.params;
 
   const [gameState, setGameState] = useState(null);
 
   const placementIcons = ["🥇", "🥈", "🥉", "4", "5", "6"];
+  const rankAbbreviations = {
+    president: "P",
+    "vice-president": "VP",
+    "vice-bum": "VB",
+    bum: "B",
+  };
+  const rankBGColours = {
+    president: "#70AE98",
+    "vice-president": "#E6B655",
+    "vice-bum": "#F0A35E",
+    bum: "#E58B88",
+  };
 
   const onPlayAgain = () => {
     // Play Again logic
@@ -95,6 +108,26 @@ const GameEndCrazyEights = ({ route, navigation }) => {
                     }`}</Text>
                     <Text style={styles.playerName}>{item}</Text>
                   </View>
+                  {getPlayerRankPres(item, gameState.playerRankings) !==
+                    "neutral" && (
+                    <View
+                      style={{
+                        ...styles.rankContainer,
+                        backgroundColor:
+                          rankBGColours[
+                            getPlayerRankPres(item, gameState.playerRankings)
+                          ],
+                      }}
+                    >
+                      <Text style={styles.rankText}>
+                        {
+                          rankAbbreviations[
+                            getPlayerRankPres(item, gameState.playerRankings)
+                          ]
+                        }
+                      </Text>
+                    </View>
+                  )}
                 </View>
               );
             }}
@@ -129,6 +162,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: "white",
     padding: 4,
     borderColor: "#BABABA",
@@ -156,6 +190,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     height: "15%",
   },
+  rankContainer: {
+    overflow: "hidden",
+    borderRadius: 100,
+    height: 24,
+    width: 24,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  rankText: {
+    color: "white",
+  },
 });
 
-export default GameEndCrazyEights;
+export default GameEndPresident;

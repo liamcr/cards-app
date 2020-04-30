@@ -1,8 +1,17 @@
 import React from "react";
-import { Image, View, StyleSheet, Button, Alert } from "react-native";
+import {
+  Image,
+  View,
+  StyleSheet,
+  Button,
+  Alert,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 import theme from "../styles/theme.style";
 import { cleanLocalStorage } from "../utils/firebaseFunctions";
 import Logo from "../assets/logo.png";
+import RoundedButton from "../components/RoundedButton";
 
 const HomePage = ({ navigation }) => {
   cleanLocalStorage();
@@ -25,24 +34,11 @@ const HomePage = ({ navigation }) => {
 
   return (
     <View style={styles.homePageContainer}>
-      {/* TODO: Replace the image URI to our real logo */}
       <Image style={styles.logo} source={Logo} resizeMode="contain" />
       <View style={styles.buttonContainer}>
-        <Button
-          title="Create Game"
-          color={theme.PRIMARY_COLOUR}
-          onPress={onCreateGame}
-        />
-        <Button
-          title="Join Game"
-          color={theme.PRIMARY_COLOUR}
-          onPress={onJoinGame}
-        />
-        <Button
-          title="Continue Game"
-          color={theme.PRIMARY_COLOUR}
-          onPress={onContinueGame}
-        />
+        <RoundedButton title={"Create Game"} onPress={onCreateGame} />
+        <RoundedButton title={"Join Game"} onPress={onJoinGame} />
+        <RoundedButton title={"Continue Game"} onPress={onContinueGame} />
       </View>
     </View>
   );
@@ -53,18 +49,31 @@ const styles = StyleSheet.create({
     height: "100%",
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-around"
+    justifyContent: "space-around",
   },
   logo: {
     height: "20%",
-    width: "70%"
+    width: "70%",
   },
   buttonContainer: {
     width: "50%",
     display: "flex",
     justifyContent: "space-between",
-    height: "20%"
-  }
+    height: 156,
+  },
+  button: {
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 16,
+    paddingRight: 16,
+    borderRadius: 100,
+    backgroundColor: theme.PRIMARY_COLOUR,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 20,
+    textAlign: "center",
+  },
 });
 
 export default HomePage;

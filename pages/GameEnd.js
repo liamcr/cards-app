@@ -11,6 +11,7 @@ import {
 import { getGame, cancelGame, resetGame } from "../utils/firebaseFunctions";
 import firestore from "@react-native-firebase/firestore";
 import theme from "../styles/theme.style";
+import RoundedButton from "../components/RoundedButton";
 
 const GameEnd = ({ route, navigation }) => {
   const { gameId, name } = route.params;
@@ -56,6 +57,7 @@ const GameEnd = ({ route, navigation }) => {
       .onSnapshot((doc) => {
         if (doc.exists) {
           let data = doc.data();
+          setGameState(data);
 
           if (!data.finished && !data.started) {
             navigation.replace("Waiting Room", {
@@ -74,12 +76,6 @@ const GameEnd = ({ route, navigation }) => {
 
     return () => unsubscribe();
   }, []);
-
-  if (gameState === null) {
-    getGame(gameId).then((game) => {
-      setGameState(game);
-    });
-  }
 
   return (
     <View style={styles.pageContainer}>
@@ -112,16 +108,8 @@ const GameEnd = ({ route, navigation }) => {
       {gameState !== null &&
         gameState.players.findIndex((player) => player.name === name) === 0 && (
           <View style={styles.buttonContainer}>
-            <Button
-              color={theme.PRIMARY_COLOUR}
-              title="Play Again"
-              onPress={onPlayAgain}
-            />
-            <Button
-              color={theme.PRIMARY_COLOUR}
-              title="Finish Game"
-              onPress={onExitGame}
-            />
+            <RoundedButton title="Play Again" onPress={onPlayAgain} />
+            <RoundedButton title="Finish Game" onPress={onExitGame} />
           </View>
         )}
     </View>
@@ -159,6 +147,9 @@ const styles = StyleSheet.create({
   playerRank: {
     fontSize: 20,
     marginRight: 8,
+    color: "#888888",
+    width: 25,
+    textAlign: "center",
   },
   playerName: {
     fontSize: 20,
