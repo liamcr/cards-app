@@ -3,7 +3,6 @@ import firestore from "@react-native-firebase/firestore";
 import pondTemplate from "../utils/pondTemplate.json";
 import AsyncStorage from "@react-native-community/async-storage";
 import MaxPlayers from "./gameMaxPlayers.json";
-import PresCardValues from "./presidentCardValues.json";
 import {
   shuffle,
   getNextPlayerCE,
@@ -12,7 +11,9 @@ import {
   isCardBurned,
   hasEveryonePassed,
   getPlayerRankPres,
+  sleep,
 } from "./helperFunctions";
+import { max } from "react-native-reanimated";
 
 /**********************************
  * Async Storage
@@ -217,7 +218,13 @@ export async function resetGame(gameId) {
 
     if (data.game === "goFish") {
       const resetPlayers = data.players.map((player) => {
-        return { name: player.name, hand: [], numPairs: 0, pairedCards: [] };
+        return {
+          name: player.name,
+          hand: [],
+          numPairs: 0,
+          pairedCards: [],
+          isCPU: player.isCPU,
+        };
       });
 
       document.update({
@@ -230,7 +237,7 @@ export async function resetGame(gameId) {
       });
     } else if (data.game === "crazyEights") {
       const resetPlayers = data.players.map((player) => {
-        return { name: player.name, hand: [] };
+        return { name: player.name, hand: [], isCPU: player.isCPU };
       });
 
       document.update({
@@ -252,6 +259,7 @@ export async function resetGame(gameId) {
           name: player.name,
           hand: [],
           rank: player.rank,
+          isCPU: player.isCPU,
         };
       });
 
@@ -458,6 +466,7 @@ export async function createGame(creatorName, gameType) {
           numPairs: 0,
           hand: [],
           pairedCards: [],
+          isCPU: false,
         },
       ],
       pond: pondTemplate,
@@ -475,6 +484,7 @@ export async function createGame(creatorName, gameType) {
         {
           name: creatorName,
           hand: [],
+          isCPU: false,
         },
       ],
       currentCard: null,
@@ -497,6 +507,7 @@ export async function createGame(creatorName, gameType) {
           name: creatorName,
           hand: [],
           rank: "neutral",
+          isCPU: false,
         },
       ],
       currentCard: null,
@@ -569,17 +580,20 @@ export async function joinGame(name, gameId) {
                 numPairs: 0,
                 hand: [],
                 pairedCards: [],
+                isCPU: false,
               });
             } else if (data.game === "crazyEights") {
               currentPlayers.push({
                 name: name,
                 hand: [],
+                isCPU: false,
               });
             } else if (data.game === "president") {
               currentPlayers.push({
                 name: name,
                 hand: [],
                 rank: "neutral",
+                isCPU: false,
               });
             }
 
@@ -974,6 +988,62 @@ export async function pairUpHand(gameId, playerName) {
   });
 
   return pairsFound;
+}
+
+/**
+ * Simulates a COM's turn in Go Fish
+ *
+ * @param {string} gameId The ID of the game in Firebase
+ * @param {string} name The name of the COM player
+ */
+export async function simGoFishTurn(gameId, name) {
+  const document = firestore()
+    .collection("liveGames")
+    .doc(gameId);
+
+  let madeCatch = true;
+  let lastRankAskedFor;
+
+  while (madeCatch) {
+    while (madeCatch) {
+      await document.get().then(async (doc) => {
+        const docData = doc.data();
+
+        let comPlayerObj = docData.players.find(
+          (player) => player.name === name
+        );
+        let opponents = docData.players.filter(
+          (player) => player.name !== name
+        );
+        let playerToAsk;
+        let maxCards = -1;
+
+        for (let i = 0; i < opponents.length; i++) {
+          if (opponents[i].hand.length > maxCards) {
+            maxCards = opponents[i].hand.length;
+            playerToAsk = opponents[i].name;
+          }
+        }
+
+        lastRankAskedFor =
+          comPlayerObj.hand[
+            Math.floor(Math.random() * comPlayerObj.hand.length)
+          ].rank;
+
+        await takeCard(gameId, name, playerToAsk, lastRankAskedFor).then(
+          (hadCard) => {
+            if (!hadCard) {
+              madeCatch = false;
+            } else {
+              madeCatch = true;
+            }
+          }
+        );
+      });
+
+      await sleep(1000);
+    }
+  }
 }
 
 /**********************************

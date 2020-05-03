@@ -199,3 +199,12 @@ export function getPlayerRankPres(name, playerRankings) {
     return "neutral";
   }
 }
+
+/**
+ * Pauses code execution for the specified amound of milliseconds.
+ *
+ * @param {number} ms The amount of sime to sleep in milliseconds
+ */
+export function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

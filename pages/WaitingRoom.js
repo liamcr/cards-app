@@ -14,6 +14,7 @@ import {
   leaveGame,
   removeGameLocally,
   startGame,
+  joinGame,
 } from "../utils/firebaseFunctions";
 import firestore from "@react-native-firebase/firestore";
 import RoundedButton from "../components/RoundedButton";
@@ -37,6 +38,15 @@ const WaitingRoom = ({ route, navigation }) => {
 
     console.log("Game Starting");
     startGame(gameId);
+  };
+
+  const onStartSinglePlayer = () => {
+    // Implement start game functionality here
+
+    console.log("Game Starting");
+    joinGame("CPU1", gameId, true);
+    joinGame("CPU2", gameId, true);
+    joinGame("CPU3", gameId, true);
   };
 
   const onCancel = () => {
@@ -175,11 +185,13 @@ const WaitingRoom = ({ route, navigation }) => {
         )}
       </View>
       <View style={styles.buttonContainer}>
-        {isCreator && (
+        {isCreator && players.length > 1 && (
+          <RoundedButton title={"Start Game"} onPress={onStart} />
+        )}
+        {players.length === 1 && (
           <RoundedButton
-            title={"Start Game"}
-            disabled={players.length < 2}
-            onPress={onStart}
+            title={"Start Game (1P)"}
+            onPress={onStartSinglePlayer}
           />
         )}
         {isCreator && (
